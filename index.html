@@ -62,6 +62,9 @@
   .stat .num{font-size:22px;font-weight:800;color:var(--primary-dark);}
   .stat .lab{font-size:11px;color:var(--text-soft);margin-top:2px;}
   .filter-row{display:flex;gap:8px;margin-bottom:12px;}
+  .group-subject-title{font-size:14px;font-weight:800;color:var(--primary-dark);margin:18px 2px 8px;padding-bottom:4px;border-bottom:2px solid var(--primary-light);}
+  .group-subject-title:first-child{margin-top:0;}
+  .group-chapter-title{font-size:12px;font-weight:700;color:var(--text-soft);margin:10px 2px 6px;padding-left:4px;border-left:3px solid var(--primary);}
   .card-item{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;}
   .card-item .q{font-weight:700;font-size:14px;margin-bottom:6px;}
   .card-item .a{font-size:13.5px;color:var(--text-soft);display:none;margin-bottom:8px;line-height:1.5;}
@@ -92,8 +95,8 @@
   .modal img{width:100%;border-radius:10px;margin-top:8px;}
   .modal p{font-size:13.5px;line-height:1.6;color:var(--text);}
   .modal .close{display:block;margin:14px auto 0;background:var(--primary);color:#fff;border:none;padding:9px 22px;border-radius:10px;font-weight:700;cursor:pointer;}
+  .chapter-title-display{font-size:12px;color:var(--primary-dark);margin-top:6px;font-weight:600;}
 
-  /* auth screen */
   #authScreen{position:fixed;inset:0;background:linear-gradient(180deg,var(--bg-top),var(--bg-bottom));display:flex;align-items:center;justify-content:center;padding:24px;z-index:100;}
   .auth-box{background:var(--surface);border-radius:20px;padding:28px 22px;width:100%;max-width:340px;box-shadow:0 8px 24px rgba(0,0,0,0.08);text-align:center;}
   .auth-box .logo{width:64px;height:64px;margin:0 auto 14px;border-radius:16px;}
@@ -147,6 +150,8 @@
         <div><label>科目</label><select id="subjectSelect"></select></div>
         <div><label>Chapter</label><select id="chapterSelect"></select></div>
       </div>
+      <label>Chapterタイトル(任意、一度入れたら疑問点側にも反映される)</label>
+      <input type="text" id="chapterTitleInput" placeholder="例: 細胞の基本構造">
     </div>
 
     <div class="card">
@@ -165,7 +170,7 @@ A: 簡潔な答え
 
     <div class="card">
       <h3>② テキストを貼り付け / 手動追加</h3>
-      <textarea id="pasteInputN" placeholder="Q:/A:形式のテキストを貼る"></textarea>
+      <textarea id="pasteInputN" placeholder="Q:/A:形式のテキストを貼る(---で区切れば何個でもまとめて読み込める)"></textarea>
       <button class="primary" id="parseBtnN">テキストを読み込む</button>
       <div class="msg" id="parseMsgN"></div>
 
@@ -180,6 +185,15 @@ A: 簡潔な答え
   </div>
 
   <div id="cat-doubt" style="display:none;">
+    <div class="card">
+      <h3>科目 / Chapter</h3>
+      <div class="row2">
+        <div><label>科目</label><select id="doubtSubjectSelect"></select></div>
+        <div><label>Chapter</label><select id="doubtChapterSelect"></select></div>
+      </div>
+      <div class="chapter-title-display" id="doubtChapterTitleDisplay"></div>
+    </div>
+
     <div class="card">
       <h3>① チャットで聞いた回答を貼る</h3>
       <p class="hint">国試レベルを超える疑問点。チャットに質問して、その回答をここに貼る。復習スケジュールには入らず、蓄積のみ。</p>
@@ -197,7 +211,16 @@ A: (回答)
     </div>
 
     <div class="card">
-      <h3>② 写真をそのまま追加</h3>
+      <h3>② 手動で文章を追加</h3>
+      <p class="hint">チャットを使わず、自分で質問と答えをそのまま入力することもできる。</p>
+      <input type="text" id="doubtManQ" placeholder="質問">
+      <input type="text" id="doubtManA" placeholder="答え" style="margin-top:8px;">
+      <button class="primary small" id="doubtManAddBtn">このカードを追加</button>
+      <div class="msg" id="doubtManMsg"></div>
+    </div>
+
+    <div class="card">
+      <h3>③ 写真をそのまま追加</h3>
       <p class="hint">チャットの回答画面のスクショ等、写真をそのまま保存することもできる。非公開ストレージに保存され、自分以外は見られない。</p>
       <label>質問(任意)</label>
       <input type="text" id="doubtImgQ" placeholder="質問(任意)">
@@ -234,6 +257,9 @@ A: (回答)
   </div>
 
   <div id="list-doubt" style="display:none;">
+    <div class="filter-row">
+      <select id="filterSubjectD"><option value="">すべての科目</option></select>
+    </div>
     <div id="listWrapD"></div>
   </div>
 </div>
@@ -269,6 +295,7 @@ const SUBJECTS = Object.keys(MEDU4_STRUCTURE);
 
 let cards = [];
 let doubts = [];
+let chapterTitles = {}; // key: subject+'||'+chapter -> title
 let pendingPreviewN = [];
 let pendingPreviewD = [];
 let reviewQueue = [];
@@ -277,6 +304,32 @@ let doubtImgFile = null;
 
 function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function todayStr(){ return new Date().toISOString().slice(0,10); }
+
+// ---------- chapter titles ----------
+function ctKey(subject, chapter){ return subject+'||'+chapter; }
+function getChapterTitle(subject, chapter){ return chapterTitles[ctKey(subject,chapter)] || ''; }
+function chapterLabel(subject, chapter){
+  const t = getChapterTitle(subject, chapter);
+  return t ? `Chapter ${chapter}: ${t}` : `Chapter ${chapter}`;
+}
+async function loadChapterTitles(){
+  const { data, error } = await sb.from('chapter_titles').select('*');
+  chapterTitles = {};
+  if(!error){ (data||[]).forEach(r=> chapterTitles[ctKey(r.subject, r.chapter)] = r.title); }
+}
+async function saveChapterTitleIfNeeded(subject, chapter, title){
+  if(!title) return;
+  if(getChapterTitle(subject, chapter) === title) return;
+  const { error } = await sb.from('chapter_titles').upsert(
+    { user_id: currentUser.id, subject, chapter, title },
+    { onConflict: 'user_id,subject,chapter' }
+  );
+  if(!error){
+    chapterTitles[ctKey(subject, chapter)] = title;
+    fillChapterSelect(chapterSelect, subjectSelect.value);
+    fillChapterSelect(doubtChapterSelect, doubtSubjectSelect.value);
+  }
+}
 
 // ---------- auth ----------
 async function initAuth(){
@@ -323,13 +376,16 @@ async function getSignedUrl(path){
 function mapCard(r){ return {id:r.id, subject:r.subject, chapter:r.chapter, question:r.question, answer:r.answer,
   principleType:r.principle_type, principleText:r.principle_text, principleImagePath:r.principle_image_path,
   interval:r.interval, repetition:r.repetition, efactor:r.efactor, nextReview:r.next_review, createdAt:r.created_at}; }
-function mapDoubt(r){ return {id:r.id, question:r.question, answer:r.answer, imagePath:r.image_path, createdAt:r.created_at}; }
+function mapDoubt(r){ return {id:r.id, subject:r.subject, chapter:r.chapter, question:r.question, answer:r.answer, imagePath:r.image_path, createdAt:r.created_at}; }
 
 async function loadAll(){
+  await loadChapterTitles();
   const { data: cardRows, error: e1 } = await sb.from('cards').select('*').order('created_at',{ascending:false});
   if(e1){ console.error(e1); cards=[]; } else { cards = (cardRows||[]).map(mapCard); }
   const { data: doubtRows, error: e2 } = await sb.from('doubts').select('*').order('created_at',{ascending:false});
   if(e2){ console.error(e2); doubts=[]; } else { doubts = (doubtRows||[]).map(mapDoubt); }
+  fillChapterSelect(chapterSelect, subjectSelect.value);
+  fillChapterSelect(doubtChapterSelect, doubtSubjectSelect.value);
   renderList(); renderStats(); renderDoubtList();
 }
 
@@ -339,16 +395,39 @@ function fillSubjectSelect(sel, includeAll){
 }
 function fillChapterSelect(sel, subject){
   const chs = MEDU4_STRUCTURE[subject] || {};
-  sel.innerHTML = Object.keys(chs).map(c=>`<option value="${c}">Chapter ${c}</option>`).join('');
+  const cur = sel.value;
+  sel.innerHTML = Object.keys(chs).map(c=>`<option value="${c}">${chapterLabel(subject,c)}</option>`).join('');
+  if(cur && chs[cur]!==undefined) sel.value = cur;
 }
 const subjectSelect = document.getElementById('subjectSelect');
 const chapterSelect = document.getElementById('chapterSelect');
+const chapterTitleInput = document.getElementById('chapterTitleInput');
+const doubtSubjectSelect = document.getElementById('doubtSubjectSelect');
+const doubtChapterSelect = document.getElementById('doubtChapterSelect');
+const doubtChapterTitleDisplay = document.getElementById('doubtChapterTitleDisplay');
+
 fillSubjectSelect(subjectSelect, false);
 fillChapterSelect(chapterSelect, subjectSelect.value);
-subjectSelect.addEventListener('change', ()=> fillChapterSelect(chapterSelect, subjectSelect.value));
+chapterTitleInput.value = getChapterTitle(subjectSelect.value, chapterSelect.value);
+subjectSelect.addEventListener('change', ()=>{ fillChapterSelect(chapterSelect, subjectSelect.value); chapterTitleInput.value = getChapterTitle(subjectSelect.value, chapterSelect.value); });
+chapterSelect.addEventListener('change', ()=>{ chapterTitleInput.value = getChapterTitle(subjectSelect.value, chapterSelect.value); });
+
+fillSubjectSelect(doubtSubjectSelect, false);
+fillChapterSelect(doubtChapterSelect, doubtSubjectSelect.value);
+function updateDoubtChapterTitleDisplay(){
+  const t = getChapterTitle(doubtSubjectSelect.value, doubtChapterSelect.value);
+  doubtChapterTitleDisplay.textContent = t ? ('Chapterタイトル: '+t) : '';
+}
+updateDoubtChapterTitleDisplay();
+doubtSubjectSelect.addEventListener('change', ()=>{ fillChapterSelect(doubtChapterSelect, doubtSubjectSelect.value); updateDoubtChapterTitleDisplay(); });
+doubtChapterSelect.addEventListener('change', updateDoubtChapterTitleDisplay);
+
 const filterSubject = document.getElementById('filterSubject');
 fillSubjectSelect(filterSubject, true);
 filterSubject.addEventListener('change', renderList);
+const filterSubjectD = document.getElementById('filterSubjectD');
+fillSubjectSelect(filterSubjectD, true);
+filterSubjectD.addEventListener('change', renderDoubtList);
 
 // ---------- tabs ----------
 document.querySelectorAll('.tabs .tab').forEach(t=>{
@@ -414,7 +493,7 @@ document.getElementById('parseBtnN').addEventListener('click', ()=>{
 function renderPreviewN(){
   const wrap = document.getElementById('previewWrapN');
   if(pendingPreviewN.length===0){ wrap.innerHTML=''; return; }
-  wrap.innerHTML = `<div class="card"><h3>確認して保存(${subjectSelect.value} Chapter${chapterSelect.value})</h3></div>`;
+  wrap.innerHTML = `<div class="card"><h3>確認して保存(${subjectSelect.value} ${chapterLabel(subjectSelect.value,chapterSelect.value)})</h3></div>`;
   pendingPreviewN.forEach((p,i)=>{
     const div = document.createElement('div'); div.className='preview-item';
     div.innerHTML = `<div class="row-label"><span style="font-size:12px;color:var(--text-soft);font-weight:700;">カード ${i+1}</span><span class="remove" data-i="${i}">削除</span></div>
@@ -430,6 +509,7 @@ function renderPreviewN(){
 async function commitPreviewN(){
   const today = todayStr();
   const subject = subjectSelect.value, chapter = chapterSelect.value;
+  await saveChapterTitleIfNeeded(subject, chapter, chapterTitleInput.value.trim());
   const rows = pendingPreviewN.map(p=>({
     user_id: currentUser.id, subject, chapter, question:p.question, answer:p.answer,
     principle_type:'none', interval:0, repetition:0, efactor:2.5, next_review:today, created_at:today
@@ -445,8 +525,10 @@ document.getElementById('manAddBtnN').addEventListener('click', async ()=>{
   const a = document.getElementById('manAN').value.trim();
   if(!q || !a){ alert('質問と答えは必須です'); return; }
   const today = todayStr();
+  const subject = subjectSelect.value, chapter = chapterSelect.value;
+  await saveChapterTitleIfNeeded(subject, chapter, chapterTitleInput.value.trim());
   const { error } = await sb.from('cards').insert([{
-    user_id: currentUser.id, subject: subjectSelect.value, chapter: chapterSelect.value, question:q, answer:a,
+    user_id: currentUser.id, subject, chapter, question:q, answer:a,
     principle_type:'none', interval:0, repetition:0, efactor:2.5, next_review:today, created_at:today
   }]);
   if(error){ alert('保存エラー: '+error.message); return; }
@@ -470,7 +552,7 @@ document.getElementById('parseBtnD').addEventListener('click', ()=>{
 function renderPreviewD(){
   const wrap = document.getElementById('previewWrapD');
   if(pendingPreviewD.length===0){ wrap.innerHTML=''; return; }
-  wrap.innerHTML = `<div class="card"><h3>確認して保存</h3></div>`;
+  wrap.innerHTML = `<div class="card"><h3>確認して保存(${doubtSubjectSelect.value} ${chapterLabel(doubtSubjectSelect.value,doubtChapterSelect.value)})</h3></div>`;
   pendingPreviewD.forEach((p,i)=>{
     const div = document.createElement('div'); div.className='preview-item';
     div.innerHTML = `<div class="row-label"><span style="font-size:12px;color:var(--text-soft);font-weight:700;">疑問点 ${i+1}</span><span class="remove" data-i="${i}">削除</span></div>
@@ -485,13 +567,31 @@ function renderPreviewD(){
 }
 async function commitPreviewD(){
   const today = todayStr();
-  const rows = pendingPreviewD.map(p=>({ user_id: currentUser.id, question:p.question, answer:p.answer, created_at:today }));
+  const subject = doubtSubjectSelect.value, chapter = doubtChapterSelect.value;
+  const rows = pendingPreviewD.map(p=>({ user_id: currentUser.id, subject, chapter, question:p.question, answer:p.answer, created_at:today }));
   const { error } = await sb.from('doubts').insert(rows);
   if(error){ alert('保存エラー: '+error.message); return; }
   pendingPreviewD=[]; document.getElementById('previewWrapD').innerHTML='';
   document.getElementById('pasteInputD').value=''; document.getElementById('parseMsgD').classList.remove('show');
   await loadAll(); alert('保存しました!');
 }
+
+// ---------- doubt: manual text ----------
+document.getElementById('doubtManAddBtn').addEventListener('click', async ()=>{
+  const q = document.getElementById('doubtManQ').value.trim();
+  const a = document.getElementById('doubtManA').value.trim();
+  if(!q){ alert('質問を入力してください'); return; }
+  const today = todayStr();
+  const { error } = await sb.from('doubts').insert([{
+    user_id: currentUser.id, subject: doubtSubjectSelect.value, chapter: doubtChapterSelect.value,
+    question:q, answer:a, created_at:today
+  }]);
+  if(error){ alert('保存エラー: '+error.message); return; }
+  document.getElementById('doubtManQ').value=''; document.getElementById('doubtManA').value='';
+  const msg = document.getElementById('doubtManMsg'); msg.textContent='追加しました'; msg.classList.add('show');
+  setTimeout(()=>msg.classList.remove('show'),1500);
+  await loadAll();
+});
 
 // ---------- doubt: photo ----------
 document.getElementById('doubtImgFile').addEventListener('change',(e)=>{
@@ -509,7 +609,10 @@ document.getElementById('doubtImgAddBtn').addEventListener('click', async ()=>{
   const path = `${currentUser.id}/doubts/${id}.jpg`;
   try{
     await uploadImage(doubtImgFile, path);
-    const { error } = await sb.from('doubts').insert([{ id, user_id: currentUser.id, question:q, answer:'', image_path:path, created_at:today }]);
+    const { error } = await sb.from('doubts').insert([{
+      id, user_id: currentUser.id, subject: doubtSubjectSelect.value, chapter: doubtChapterSelect.value,
+      question:q, answer:'', image_path:path, created_at:today
+    }]);
     if(error) throw error;
   }catch(e){ alert('保存エラー: '+e.message); return; }
   document.getElementById('doubtImgQ').value='';
@@ -521,21 +624,37 @@ document.getElementById('doubtImgAddBtn').addEventListener('click', async ()=>{
   await loadAll();
 });
 
+// ---------- grouping helper ----------
+function groupBySubjectChapter(list){
+  const out = {};
+  list.forEach(item=>{
+    const subj = item.subject || '未分類';
+    const chap = (item.chapter===undefined || item.chapter===null || item.chapter==='') ? '-' : item.chapter;
+    out[subj] = out[subj] || {};
+    out[subj][chap] = out[subj][chap] || [];
+    out[subj][chap].push(item);
+  });
+  return out;
+}
+function sortedChapterKeys(obj){
+  return Object.keys(obj).sort((a,b)=>{
+    const na = parseFloat(a), nb = parseFloat(b);
+    if(isNaN(na) && isNaN(nb)) return a.localeCompare(b);
+    if(isNaN(na)) return 1;
+    if(isNaN(nb)) return -1;
+    return na-nb;
+  });
+}
+
 // ---------- list: normal ----------
 function renderStats(){
   const today = todayStr();
   document.getElementById('statTotal').textContent = cards.length;
   document.getElementById('statDue').textContent = cards.filter(c=>c.nextReview<=today).length;
 }
-function renderList(){
-  const wrap = document.getElementById('listWrapN');
-  const filt = filterSubject.value;
-  let list = filt ? cards.filter(c=>c.subject===filt) : cards;
-  if(list.length===0){ wrap.innerHTML = '<div class="empty">まだカードがありません。「入力」タブから作成してください。</div>'; return; }
-  const sorted = [...list].sort((a,b)=> b.createdAt.localeCompare(a.createdAt));
-  wrap.innerHTML = sorted.map(c=>`
+function cardItemHtml(c){
+  return `
     <div class="card-item">
-      <span class="tag">${c.subject} Ch${c.chapter}</span>
       <div class="q">${escapeHtml(c.question)}</div>
       <div class="a" id="a-${c.id}">${escapeHtml(c.answer)}</div>
       <div class="btn-row">
@@ -552,8 +671,26 @@ function renderList(){
         <button class="primary small" data-act="save-principle" data-id="${c.id}">保存</button>
       </div>
       <div class="meta"><span>次回: ${c.nextReview}</span><span>復習${c.repetition}回</span></div>
-    </div>
-  `).join('');
+    </div>`;
+}
+function renderList(){
+  const wrap = document.getElementById('listWrapN');
+  const filt = filterSubject.value;
+  let list = filt ? cards.filter(c=>c.subject===filt) : cards;
+  if(list.length===0){ wrap.innerHTML = '<div class="empty">まだカードがありません。「入力」タブから作成してください。</div>'; return; }
+  const groups = groupBySubjectChapter(list);
+  const subjOrder = filt ? [filt] : SUBJECTS.filter(s=>groups[s]);
+  let html = '';
+  subjOrder.forEach(subj=>{
+    if(!groups[subj]) return;
+    html += `<div class="group-subject-title">${escapeHtml(subj)}</div>`;
+    sortedChapterKeys(groups[subj]).forEach(ch=>{
+      html += `<div class="group-chapter-title">${escapeHtml(chapterLabel(subj,ch))}</div>`;
+      const items = groups[subj][ch].slice().sort((a,b)=> b.createdAt.localeCompare(a.createdAt));
+      items.forEach(c=>{ html += cardItemHtml(c); });
+    });
+  });
+  wrap.innerHTML = html;
 
   wrap.querySelectorAll('[data-act=toggle]').forEach(b=> b.addEventListener('click',()=> document.getElementById('a-'+b.dataset.id).classList.toggle('show')));
   wrap.querySelectorAll('[data-act=principle]').forEach(b=> b.addEventListener('click',()=> showPrincipleModal(b.dataset.id)));
@@ -600,11 +737,8 @@ async function showPrincipleModal(id){
 document.getElementById('modalClose').addEventListener('click',()=> document.getElementById('modalOverlay').classList.remove('show'));
 
 // ---------- list: doubt ----------
-function renderDoubtList(){
-  const wrap = document.getElementById('listWrapD');
-  if(doubts.length===0){ wrap.innerHTML = '<div class="empty">疑問点はまだありません。</div>'; return; }
-  const sorted = [...doubts].sort((a,b)=> b.createdAt.localeCompare(a.createdAt));
-  wrap.innerHTML = sorted.map(d=>`
+function doubtItemHtml(d){
+  return `
     <div class="card-item">
       <span class="tag doubt">疑問点</span>
       <div class="q">${escapeHtml(d.question || '(質問なし)')}</div>
@@ -612,15 +746,32 @@ function renderDoubtList(){
       ${d.imagePath ? '<img class="thumb" id="dimg-'+d.id+'">' : ''}
       <div class="btn-row"><button data-act="ddelete" data-id="${d.id}">削除</button></div>
       <div class="meta"><span>${d.createdAt}</span><span></span></div>
-    </div>
-  `).join('');
+    </div>`;
+}
+function renderDoubtList(){
+  const wrap = document.getElementById('listWrapD');
+  const filt = filterSubjectD.value;
+  let list = filt ? doubts.filter(d=>d.subject===filt) : doubts;
+  if(list.length===0){ wrap.innerHTML = '<div class="empty">疑問点はまだありません。</div>'; return; }
+  const groups = groupBySubjectChapter(list);
+  const subjOrder = filt ? [filt] : [...SUBJECTS.filter(s=>groups[s]), ...(groups['未分類']?['未分類']:[])];
+  let html = '';
+  subjOrder.forEach(subj=>{
+    if(!groups[subj]) return;
+    html += `<div class="group-subject-title">${escapeHtml(subj)}</div>`;
+    sortedChapterKeys(groups[subj]).forEach(ch=>{
+      html += `<div class="group-chapter-title">${ch==='-' ? '科目のみ' : escapeHtml(chapterLabel(subj,ch))}</div>`;
+      const items = groups[subj][ch].slice().sort((a,b)=> b.createdAt.localeCompare(a.createdAt));
+      items.forEach(d=>{ html += doubtItemHtml(d); });
+    });
+  });
+  wrap.innerHTML = html;
   wrap.querySelectorAll('[data-act=ddelete]').forEach(b=> b.addEventListener('click', async ()=>{
     if(!confirm('この疑問点を削除しますか?')) return;
     const { error } = await sb.from('doubts').delete().eq('id', b.dataset.id);
     if(error){ alert('削除エラー: '+error.message); return; }
     await loadAll();
   }));
-  // 写真の署名付きURLを取得してサムネイル表示
   doubts.forEach(async d=>{
     if(d.imagePath){
       const url = await getSignedUrl(d.imagePath);
