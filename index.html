@@ -145,7 +145,10 @@
 <div class="page active" id="page-input">
 
   <div class="card" id="setPasswordCard">
-    <h3>パスワード設定(初回のみ)</h3>
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h3 style="margin:0;">パスワード設定(初回のみ)</h3>
+      <span id="closePasswordCard" style="cursor:pointer;color:var(--text-soft);font-size:18px;line-height:1;padding:2px 6px;">×</span>
+    </div>
     <p class="hint">メールのリンクでログインした直後に、ここでパスワードを設定すると、次回からはパスワードだけでログインできるようになる。</p>
     <input type="password" id="newPassword" placeholder="新しいパスワード(6文字以上)">
     <button class="primary small" id="setPasswordBtn">このパスワードを設定する</button>
@@ -433,9 +436,20 @@ document.getElementById('setPasswordBtn').addEventListener('click', async ()=>{
   msg.textContent = error ? ('エラー: '+error.message) : 'パスワードを設定しました。次回からホーム画面のアプリでこのパスワードでログインできます。';
   msg.classList.add('show');
   document.getElementById('newPassword').value='';
+  if(!error){
+    setTimeout(()=>{ setPasswordCard.style.display='none'; localStorage.setItem('hidePasswordCard','1'); }, 1500);
+  }
 });
 document.getElementById('logoutBtn').addEventListener('click', async ()=>{ await sb.auth.signOut(); });
 initAuth();
+
+// ---------- password card visibility ----------
+const setPasswordCard = document.getElementById('setPasswordCard');
+if(localStorage.getItem('hidePasswordCard')==='1'){ setPasswordCard.style.display='none'; }
+document.getElementById('closePasswordCard').addEventListener('click', ()=>{
+  setPasswordCard.style.display='none';
+  localStorage.setItem('hidePasswordCard','1');
+});
 
 // ---------- storage(image) helpers ----------
 async function uploadImage(file, path){
