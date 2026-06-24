@@ -37,17 +37,17 @@
   .card h3{margin:0 0 6px;font-size:14px;color:var(--primary-dark);}
   .card p.hint{font-size:12px;color:var(--text-soft);line-height:1.6;margin:0 0 4px;}
   label{font-size:12px;color:var(--text-soft);display:block;margin-bottom:6px;margin-top:12px;font-weight:600;}
-  textarea,input[type=text],input[type=email],select{width:100%;border:1px solid var(--border);border-radius:10px;padding:10px;font-size:14px;font-family:inherit;background:#fafffd;resize:vertical;}
+  textarea,input[type=text],input[type=email],input[type=password],select{width:100%;border:1px solid var(--border);border-radius:10px;padding:10px;font-size:14px;font-family:inherit;background:#fafffd;resize:vertical;}
   textarea{min-height:90px;}
   select{appearance:none;}
-  .mode-row{display:flex;gap:8px;margin-top:6px;}
-  .mode-btn{flex:1;padding:9px 4px;text-align:center;border-radius:10px;font-size:12.5px;border:1px solid var(--border);background:#fafffd;color:var(--text-soft);cursor:pointer;font-weight:600;}
+  .mode-row{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;}
+  .mode-btn{flex:1;min-width:90px;padding:9px 4px;text-align:center;border-radius:10px;font-size:12px;border:1px solid var(--border);background:#fafffd;color:var(--text-soft);cursor:pointer;font-weight:600;}
   .mode-btn.active{background:var(--primary-light);border-color:var(--primary);color:var(--primary-dark);}
   .row2{display:flex;gap:8px;}
   .row2>div{flex:1;}
   button.primary{width:100%;margin-top:14px;background:var(--primary);color:#fff;border:none;padding:13px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 10px rgba(79,174,133,0.3);}
   button.primary.small{padding:9px;font-size:13px;margin-top:8px;}
-  button.ghost{background:none;border:1px solid var(--border);color:var(--text-soft);padding:9px 14px;border-radius:10px;font-size:13px;cursor:pointer;font-weight:600;}
+  button.ghost{background:none;border:1px solid var(--border);color:var(--text-soft);padding:9px 14px;border-radius:10px;font-size:13px;cursor:pointer;font-weight:600;width:100%;margin-top:8px;}
   .copybox{background:#f3fbf7;border:1px dashed var(--primary);border-radius:10px;padding:10px;font-size:12px;color:var(--text);white-space:pre-wrap;line-height:1.5;position:relative;}
   .copybox .copybtn{position:absolute;top:6px;right:6px;background:var(--primary);color:#fff;border:none;border-radius:7px;font-size:11px;padding:4px 8px;cursor:pointer;}
   .file-row{display:flex;align-items:center;gap:10px;margin-top:6px;}
@@ -75,6 +75,7 @@
   .btn-row button{flex:1;font-size:12px;padding:8px 4px;border-radius:9px;border:1px solid var(--border);background:#fafffd;color:var(--primary-dark);font-weight:600;cursor:pointer;min-width:70px;}
   .tag{display:inline-block;font-size:10.5px;background:var(--primary-light);color:var(--primary-dark);padding:2px 8px;border-radius:8px;margin-right:4px;}
   .tag.doubt{background:#fdeee7;color:#b8552f;}
+  .tag.vignette{background:#eaf0fd;color:#3a5fb8;}
   .empty{text-align:center;color:var(--text-soft);font-size:13px;padding:40px 10px;}
   .principle-edit{display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px;}
   .principle-edit.show{display:block;}
@@ -97,11 +98,13 @@
   .modal .close{display:block;margin:14px auto 0;background:var(--primary);color:#fff;border:none;padding:9px 22px;border-radius:10px;font-weight:700;cursor:pointer;}
   .chapter-title-display{font-size:12px;color:var(--primary-dark);margin-top:6px;font-weight:600;}
 
-  #authScreen{position:fixed;inset:0;background:linear-gradient(180deg,var(--bg-top),var(--bg-bottom));display:flex;align-items:center;justify-content:center;padding:24px;z-index:100;}
+  #authScreen{position:fixed;inset:0;background:linear-gradient(180deg,var(--bg-top),var(--bg-bottom));display:flex;align-items:center;justify-content:center;padding:24px;z-index:100;overflow-y:auto;}
   .auth-box{background:var(--surface);border-radius:20px;padding:28px 22px;width:100%;max-width:340px;box-shadow:0 8px 24px rgba(0,0,0,0.08);text-align:center;}
   .auth-box .logo{width:64px;height:64px;margin:0 auto 14px;border-radius:16px;}
   .auth-box h2{font-size:16px;color:var(--primary-dark);margin:0 0 4px;}
   .auth-box p{font-size:12.5px;color:var(--text-soft);margin:0 0 16px;line-height:1.6;}
+  .auth-sub{margin-top:18px;border-top:1px solid var(--border);padding-top:14px;}
+  .auth-sub p{font-size:11px;}
 </style>
 </head>
 <body>
@@ -110,10 +113,15 @@
   <div class="auth-box">
     <div class="logo"><img src="icons/icon-192.png" alt="logo" style="width:100%;height:100%;border-radius:16px;"></div>
     <h2>国試カード</h2>
-    <p>自分専用のログインリンクをメールに送ります。写真やカードは自分以外には見えません。</p>
+    <p>パスワードでログインします。写真やカードは自分以外には見えません。</p>
     <input type="email" id="authEmail" placeholder="メールアドレス">
-    <button class="primary" id="sendLinkBtn">ログインリンクを送る</button>
+    <input type="password" id="authPassword" placeholder="パスワード" style="margin-top:8px;">
+    <button class="primary" id="loginBtn">ログイン</button>
     <div class="msg" id="authMsg" style="text-align:left;"></div>
+    <div class="auth-sub">
+      <p>初めての方、またはパスワードをまだ設定していない場合</p>
+      <button class="ghost" id="sendLinkBtn">メールでログインリンクを送る(初回のみ)</button>
+    </div>
   </div>
 </div>
 
@@ -136,10 +144,19 @@
 <!-- 入力 -->
 <div class="page active" id="page-input">
 
+  <div class="card" id="setPasswordCard">
+    <h3>パスワード設定(初回のみ)</h3>
+    <p class="hint">メールのリンクでログインした直後に、ここでパスワードを設定すると、次回からはパスワードだけでログインできるようになる。</p>
+    <input type="password" id="newPassword" placeholder="新しいパスワード(6文字以上)">
+    <button class="primary small" id="setPasswordBtn">このパスワードを設定する</button>
+    <div class="msg" id="setPasswordMsg"></div>
+  </div>
+
   <div class="card">
     <div class="mode-row">
-      <div class="mode-btn active" data-cat="normal">通常カード(復習対象)</div>
-      <div class="mode-btn" data-cat="doubt">疑問点(復習対象外)</div>
+      <div class="mode-btn active" data-cat="normal">通常カード</div>
+      <div class="mode-btn" data-cat="doubt">疑問点</div>
+      <div class="mode-btn" data-cat="vignette">臨床像</div>
     </div>
   </div>
 
@@ -150,7 +167,7 @@
         <div><label>科目</label><select id="subjectSelect"></select></div>
         <div><label>Chapter</label><select id="chapterSelect"></select></div>
       </div>
-      <label>Chapterタイトル(任意、一度入れたら疑問点側にも反映される)</label>
+      <label>Chapterタイトル(任意、一度入れたら疑問点・臨床像にも反映される)</label>
       <input type="text" id="chapterTitleInput" placeholder="例: 細胞の基本構造">
     </div>
 
@@ -236,6 +253,36 @@ A: (回答)
     <div id="previewWrapD"></div>
   </div>
 
+  <div id="cat-vignette" style="display:none;">
+    <div class="card">
+      <h3>科目 / Chapter</h3>
+      <div class="row2">
+        <div><label>科目</label><select id="vignSubjectSelect"></select></div>
+        <div><label>Chapter</label><select id="vignChapterSelect"></select></div>
+      </div>
+      <div class="chapter-title-display" id="vignChapterTitleDisplay"></div>
+    </div>
+
+    <div class="card">
+      <h3>臨床像を追加</h3>
+      <p class="hint">国試の問題を写真で、答え/解説も写真で登録する。通常カードと同じく忘却曲線で復習される。</p>
+      <label>問題の写真</label>
+      <div class="file-row">
+        <input type="file" id="vignQFile" accept="image/*">
+        <img id="vignQPreview" style="display:none;">
+      </div>
+      <label>答え/解説の写真</label>
+      <div class="file-row">
+        <input type="file" id="vignAFile" accept="image/*">
+        <img id="vignAPreview" style="display:none;">
+      </div>
+      <label>メモ(任意)</label>
+      <input type="text" id="vignCaption" placeholder="例: 心電図の所見に注意">
+      <button class="primary" id="vignAddBtn">臨床像を追加</button>
+      <div class="msg" id="vignMsg"></div>
+    </div>
+  </div>
+
 </div>
 
 <!-- 一覧 -->
@@ -243,6 +290,7 @@ A: (回答)
   <div class="mode-row" style="margin-bottom:12px;">
     <div class="mode-btn active" data-listcat="normal">通常カード</div>
     <div class="mode-btn" data-listcat="doubt">疑問点</div>
+    <div class="mode-btn" data-listcat="vignette">臨床像</div>
   </div>
 
   <div id="list-normal">
@@ -261,6 +309,13 @@ A: (回答)
       <select id="filterSubjectD"><option value="">すべての科目</option></select>
     </div>
     <div id="listWrapD"></div>
+  </div>
+
+  <div id="list-vignette" style="display:none;">
+    <div class="filter-row">
+      <select id="filterSubjectV"><option value="">すべての科目</option></select>
+    </div>
+    <div id="listWrapV"></div>
   </div>
 </div>
 
@@ -295,12 +350,15 @@ const SUBJECTS = Object.keys(MEDU4_STRUCTURE);
 
 let cards = [];
 let doubts = [];
-let chapterTitles = {}; // key: subject+'||'+chapter -> title
+let vignettes = [];
+let chapterTitles = {};
 let pendingPreviewN = [];
 let pendingPreviewD = [];
 let reviewQueue = [];
 let reviewIdx = 0;
 let doubtImgFile = null;
+let vignQFile = null;
+let vignAFile = null;
 
 function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function todayStr(){ return new Date().toISOString().slice(0,10); }
@@ -328,6 +386,7 @@ async function saveChapterTitleIfNeeded(subject, chapter, title){
     chapterTitles[ctKey(subject, chapter)] = title;
     fillChapterSelect(chapterSelect, subjectSelect.value);
     fillChapterSelect(doubtChapterSelect, doubtSubjectSelect.value);
+    fillChapterSelect(vignChapterSelect, vignSubjectSelect.value);
   }
 }
 
@@ -349,13 +408,31 @@ async function onLoggedIn(user){
   document.getElementById('appRoot').style.display='block';
   await loadAll();
 }
+document.getElementById('loginBtn').addEventListener('click', async ()=>{
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const msg = document.getElementById('authMsg');
+  if(!email || !password){ alert('メールアドレスとパスワードを入力してください'); return; }
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  msg.textContent = error ? ('エラー: '+error.message) : '';
+  if(error) msg.classList.add('show');
+});
 document.getElementById('sendLinkBtn').addEventListener('click', async ()=>{
   const email = document.getElementById('authEmail').value.trim();
   const msg = document.getElementById('authMsg');
   if(!email){ alert('メールアドレスを入力してください'); return; }
   const { error } = await sb.auth.signInWithOtp({ email, options:{ emailRedirectTo: window.location.href.split('#')[0] } });
-  msg.textContent = error ? ('エラー: '+error.message) : 'メールにログインリンクを送りました。リンクをタップして戻ってきてください。';
+  msg.textContent = error ? ('エラー: '+error.message) : 'メールにログインリンクを送りました。リンクをタップして開いたら(Safariでも構わない)、そのまま「パスワード設定」からパスワードを決めてください。';
   msg.classList.add('show');
+});
+document.getElementById('setPasswordBtn').addEventListener('click', async ()=>{
+  const pw = document.getElementById('newPassword').value;
+  const msg = document.getElementById('setPasswordMsg');
+  if(!pw || pw.length<6){ alert('6文字以上のパスワードを入力してください'); return; }
+  const { error } = await sb.auth.updateUser({ password: pw });
+  msg.textContent = error ? ('エラー: '+error.message) : 'パスワードを設定しました。次回からホーム画面のアプリでこのパスワードでログインできます。';
+  msg.classList.add('show');
+  document.getElementById('newPassword').value='';
 });
 document.getElementById('logoutBtn').addEventListener('click', async ()=>{ await sb.auth.signOut(); });
 initAuth();
@@ -377,16 +454,21 @@ function mapCard(r){ return {id:r.id, subject:r.subject, chapter:r.chapter, ques
   principleType:r.principle_type, principleText:r.principle_text, principleImagePath:r.principle_image_path,
   interval:r.interval, repetition:r.repetition, efactor:r.efactor, nextReview:r.next_review, createdAt:r.created_at}; }
 function mapDoubt(r){ return {id:r.id, subject:r.subject, chapter:r.chapter, question:r.question, answer:r.answer, imagePath:r.image_path, createdAt:r.created_at}; }
+function mapVignette(r){ return {id:r.id, subject:r.subject, chapter:r.chapter, questionImagePath:r.question_image_path, answerImagePath:r.answer_image_path,
+  caption:r.caption, interval:r.interval, repetition:r.repetition, efactor:r.efactor, nextReview:r.next_review, createdAt:r.created_at}; }
 
 async function loadAll(){
   await loadChapterTitles();
   const { data: cardRows, error: e1 } = await sb.from('cards').select('*').order('created_at',{ascending:false});
-  if(e1){ console.error(e1); cards=[]; } else { cards = (cardRows||[]).map(mapCard); }
+  cards = e1 ? [] : (cardRows||[]).map(mapCard);
   const { data: doubtRows, error: e2 } = await sb.from('doubts').select('*').order('created_at',{ascending:false});
-  if(e2){ console.error(e2); doubts=[]; } else { doubts = (doubtRows||[]).map(mapDoubt); }
+  doubts = e2 ? [] : (doubtRows||[]).map(mapDoubt);
+  const { data: vignRows, error: e3 } = await sb.from('vignettes').select('*').order('created_at',{ascending:false});
+  vignettes = e3 ? [] : (vignRows||[]).map(mapVignette);
   fillChapterSelect(chapterSelect, subjectSelect.value);
   fillChapterSelect(doubtChapterSelect, doubtSubjectSelect.value);
-  renderList(); renderStats(); renderDoubtList();
+  fillChapterSelect(vignChapterSelect, vignSubjectSelect.value);
+  renderList(); renderStats(); renderDoubtList(); renderVignetteList();
 }
 
 // ---------- subject/chapter selects ----------
@@ -405,6 +487,9 @@ const chapterTitleInput = document.getElementById('chapterTitleInput');
 const doubtSubjectSelect = document.getElementById('doubtSubjectSelect');
 const doubtChapterSelect = document.getElementById('doubtChapterSelect');
 const doubtChapterTitleDisplay = document.getElementById('doubtChapterTitleDisplay');
+const vignSubjectSelect = document.getElementById('vignSubjectSelect');
+const vignChapterSelect = document.getElementById('vignChapterSelect');
+const vignChapterTitleDisplay = document.getElementById('vignChapterTitleDisplay');
 
 fillSubjectSelect(subjectSelect, false);
 fillChapterSelect(chapterSelect, subjectSelect.value);
@@ -422,12 +507,25 @@ updateDoubtChapterTitleDisplay();
 doubtSubjectSelect.addEventListener('change', ()=>{ fillChapterSelect(doubtChapterSelect, doubtSubjectSelect.value); updateDoubtChapterTitleDisplay(); });
 doubtChapterSelect.addEventListener('change', updateDoubtChapterTitleDisplay);
 
+fillSubjectSelect(vignSubjectSelect, false);
+fillChapterSelect(vignChapterSelect, vignSubjectSelect.value);
+function updateVignChapterTitleDisplay(){
+  const t = getChapterTitle(vignSubjectSelect.value, vignChapterSelect.value);
+  vignChapterTitleDisplay.textContent = t ? ('Chapterタイトル: '+t) : '';
+}
+updateVignChapterTitleDisplay();
+vignSubjectSelect.addEventListener('change', ()=>{ fillChapterSelect(vignChapterSelect, vignSubjectSelect.value); updateVignChapterTitleDisplay(); });
+vignChapterSelect.addEventListener('change', updateVignChapterTitleDisplay);
+
 const filterSubject = document.getElementById('filterSubject');
 fillSubjectSelect(filterSubject, true);
 filterSubject.addEventListener('change', renderList);
 const filterSubjectD = document.getElementById('filterSubjectD');
 fillSubjectSelect(filterSubjectD, true);
 filterSubjectD.addEventListener('change', renderDoubtList);
+const filterSubjectV = document.getElementById('filterSubjectV');
+fillSubjectSelect(filterSubjectV, true);
+filterSubjectV.addEventListener('change', renderVignetteList);
 
 // ---------- tabs ----------
 document.querySelectorAll('.tabs .tab').forEach(t=>{
@@ -436,7 +534,7 @@ document.querySelectorAll('.tabs .tab').forEach(t=>{
     document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
     t.classList.add('active');
     document.getElementById('page-'+t.dataset.tab).classList.add('active');
-    if(t.dataset.tab==='list'){ renderList(); renderStats(); renderDoubtList(); }
+    if(t.dataset.tab==='list'){ renderList(); renderStats(); renderDoubtList(); renderVignetteList(); }
     if(t.dataset.tab==='review'){ startReview(); }
   });
 });
@@ -446,6 +544,7 @@ document.querySelectorAll('[data-cat]').forEach(b=>{
     b.classList.add('active');
     document.getElementById('cat-normal').style.display = b.dataset.cat==='normal' ? 'block':'none';
     document.getElementById('cat-doubt').style.display = b.dataset.cat==='doubt' ? 'block':'none';
+    document.getElementById('cat-vignette').style.display = b.dataset.cat==='vignette' ? 'block':'none';
   });
 });
 document.querySelectorAll('[data-listcat]').forEach(b=>{
@@ -454,6 +553,7 @@ document.querySelectorAll('[data-listcat]').forEach(b=>{
     b.classList.add('active');
     document.getElementById('list-normal').style.display = b.dataset.listcat==='normal' ? 'block':'none';
     document.getElementById('list-doubt').style.display = b.dataset.listcat==='doubt' ? 'block':'none';
+    document.getElementById('list-vignette').style.display = b.dataset.listcat==='vignette' ? 'block':'none';
   });
 });
 document.querySelectorAll('.copybtn').forEach(btn=>{
@@ -624,6 +724,47 @@ document.getElementById('doubtImgAddBtn').addEventListener('click', async ()=>{
   await loadAll();
 });
 
+// ---------- vignette ----------
+document.getElementById('vignQFile').addEventListener('change',(e)=>{
+  const file = e.target.files[0]; if(!file) return;
+  vignQFile = file;
+  const reader = new FileReader();
+  reader.onload = ()=>{ const prev = document.getElementById('vignQPreview'); prev.src = reader.result; prev.style.display='block'; };
+  reader.readAsDataURL(file);
+});
+document.getElementById('vignAFile').addEventListener('change',(e)=>{
+  const file = e.target.files[0]; if(!file) return;
+  vignAFile = file;
+  const reader = new FileReader();
+  reader.onload = ()=>{ const prev = document.getElementById('vignAPreview'); prev.src = reader.result; prev.style.display='block'; };
+  reader.readAsDataURL(file);
+});
+document.getElementById('vignAddBtn').addEventListener('click', async ()=>{
+  if(!vignQFile || !vignAFile){ alert('問題の写真と答え/解説の写真の両方を選択してください'); return; }
+  const today = todayStr();
+  const id = crypto.randomUUID();
+  const qPath = `${currentUser.id}/vignette/${id}_q.jpg`;
+  const aPath = `${currentUser.id}/vignette/${id}_a.jpg`;
+  const caption = document.getElementById('vignCaption').value.trim();
+  try{
+    await uploadImage(vignQFile, qPath);
+    await uploadImage(vignAFile, aPath);
+    const { error } = await sb.from('vignettes').insert([{
+      id, user_id: currentUser.id, subject: vignSubjectSelect.value, chapter: vignChapterSelect.value,
+      question_image_path:qPath, answer_image_path:aPath, caption,
+      interval:0, repetition:0, efactor:2.5, next_review:today, created_at:today
+    }]);
+    if(error) throw error;
+  }catch(e){ alert('保存エラー: '+e.message); return; }
+  document.getElementById('vignQFile').value=''; document.getElementById('vignAFile').value='';
+  document.getElementById('vignQPreview').style.display='none'; document.getElementById('vignAPreview').style.display='none';
+  document.getElementById('vignCaption').value='';
+  vignQFile=null; vignAFile=null;
+  const msg = document.getElementById('vignMsg'); msg.textContent='追加しました'; msg.classList.add('show');
+  setTimeout(()=>msg.classList.remove('show'),1500);
+  await loadAll();
+});
+
 // ---------- grouping helper ----------
 function groupBySubjectChapter(list){
   const out = {};
@@ -649,8 +790,8 @@ function sortedChapterKeys(obj){
 // ---------- list: normal ----------
 function renderStats(){
   const today = todayStr();
-  document.getElementById('statTotal').textContent = cards.length;
-  document.getElementById('statDue').textContent = cards.filter(c=>c.nextReview<=today).length;
+  document.getElementById('statTotal').textContent = cards.length + vignettes.length;
+  document.getElementById('statDue').textContent = cards.filter(c=>c.nextReview<=today).length + vignettes.filter(v=>v.nextReview<=today).length;
 }
 function cardItemHtml(c){
   return `
@@ -781,10 +922,63 @@ function renderDoubtList(){
   });
 }
 
-// ---------- review (SM-2, normal only) ----------
+// ---------- list: vignette ----------
+function vignItemHtml(v){
+  return `
+    <div class="card-item">
+      <span class="tag vignette">臨床像</span>
+      ${v.caption ? '<div class="q">'+escapeHtml(v.caption)+'</div>' : ''}
+      <img class="thumb" id="vqimg-${v.id}">
+      <div class="btn-row">
+        <button data-act="vanswer" data-id="${v.id}">解説を見る</button>
+        <button data-act="vdelete" data-id="${v.id}">削除</button>
+      </div>
+      <div class="meta"><span>次回: ${v.nextReview}</span><span>復習${v.repetition}回</span></div>
+    </div>`;
+}
+function renderVignetteList(){
+  const wrap = document.getElementById('listWrapV');
+  const filt = filterSubjectV.value;
+  let list = filt ? vignettes.filter(v=>v.subject===filt) : vignettes;
+  if(list.length===0){ wrap.innerHTML = '<div class="empty">臨床像はまだありません。</div>'; return; }
+  const groups = groupBySubjectChapter(list);
+  const subjOrder = filt ? [filt] : SUBJECTS.filter(s=>groups[s]);
+  let html = '';
+  subjOrder.forEach(subj=>{
+    if(!groups[subj]) return;
+    html += `<div class="group-subject-title">${escapeHtml(subj)}</div>`;
+    sortedChapterKeys(groups[subj]).forEach(ch=>{
+      html += `<div class="group-chapter-title">${escapeHtml(chapterLabel(subj,ch))}</div>`;
+      const items = groups[subj][ch].slice().sort((a,b)=> b.createdAt.localeCompare(a.createdAt));
+      items.forEach(v=>{ html += vignItemHtml(v); });
+    });
+  });
+  wrap.innerHTML = html;
+  wrap.querySelectorAll('[data-act=vanswer]').forEach(b=> b.addEventListener('click', async ()=>{
+    const v = vignettes.find(x=>x.id===b.dataset.id); if(!v) return;
+    const url = await getSignedUrl(v.answerImagePath);
+    document.getElementById('modalBody').innerHTML = `<img src="${url}">`;
+    document.getElementById('modalOverlay').classList.add('show');
+  }));
+  wrap.querySelectorAll('[data-act=vdelete]').forEach(b=> b.addEventListener('click', async ()=>{
+    if(!confirm('この臨床像を削除しますか?')) return;
+    const { error } = await sb.from('vignettes').delete().eq('id', b.dataset.id);
+    if(error){ alert('削除エラー: '+error.message); return; }
+    await loadAll();
+  }));
+  vignettes.forEach(async v=>{
+    const url = await getSignedUrl(v.questionImagePath);
+    const img = document.getElementById('vqimg-'+v.id);
+    if(img && url) img.src = url;
+  });
+}
+
+// ---------- review (SM-2, normal cards + vignettes) ----------
 function startReview(){
   const today = todayStr();
-  reviewQueue = cards.filter(c=>c.nextReview<=today);
+  const normalDue = cards.filter(c=>c.nextReview<=today).map(c=>({kind:'normal', data:c}));
+  const vignDue = vignettes.filter(v=>v.nextReview<=today).map(v=>({kind:'vignette', data:v}));
+  reviewQueue = [...normalDue, ...vignDue];
   reviewIdx = 0;
   renderReview();
 }
@@ -795,47 +989,70 @@ async function renderReview(){
     cardEl.innerHTML = '<div class="empty">今日の復習対象はありません 🎉</div>'; progress.textContent=''; return;
   }
   progress.textContent = `${reviewIdx+1} / ${reviewQueue.length}`;
-  const c = reviewQueue[reviewIdx];
-  let principleImgHtml = '';
-  if(c.principleType==='image' && c.principleImagePath){
-    const url = await getSignedUrl(c.principleImagePath);
-    principleImgHtml = `<img src="${url}" style="max-width:100%;border-radius:10px;margin-top:8px;">`;
+  const item = reviewQueue[reviewIdx];
+
+  if(item.kind==='normal'){
+    const c = item.data;
+    let principleImgHtml = '';
+    if(c.principleType==='image' && c.principleImagePath){
+      const url = await getSignedUrl(c.principleImagePath);
+      principleImgHtml = `<img src="${url}" style="max-width:100%;border-radius:10px;margin-top:8px;">`;
+    }
+    cardEl.innerHTML = `
+      <div class="review-q">${escapeHtml(c.question)}</div>
+      <div class="review-a" id="revA">
+        <strong>${escapeHtml(c.answer)}</strong>
+        ${c.principleText ? '<div style="margin-top:8px;font-size:13px;">'+escapeHtml(c.principleText)+'</div>' : ''}
+        ${principleImgHtml}
+      </div>
+      <button class="ghost reveal-btn" id="revealBtn">答えを見る</button>
+      <div class="grade-row" id="gradeRow">
+        <button class="grade-btn g1" data-q="2">忘れた</button>
+        <button class="grade-btn g2" data-q="3">微妙</button>
+        <button class="grade-btn g3" data-q="5">覚えてた</button>
+      </div>`;
+  } else {
+    const v = item.data;
+    const qUrl = await getSignedUrl(v.questionImagePath);
+    const aUrl = await getSignedUrl(v.answerImagePath);
+    cardEl.innerHTML = `
+      ${v.caption ? '<div class="review-q" style="font-size:13px;margin-bottom:8px;">'+escapeHtml(v.caption)+'</div>' : ''}
+      <img src="${qUrl}" style="max-width:100%;border-radius:10px;">
+      <div class="review-a" id="revA">
+        <img src="${aUrl}" style="max-width:100%;border-radius:10px;margin-top:8px;">
+      </div>
+      <button class="ghost reveal-btn" id="revealBtn">答え/解説を見る</button>
+      <div class="grade-row" id="gradeRow">
+        <button class="grade-btn g1" data-q="2">忘れた</button>
+        <button class="grade-btn g2" data-q="3">微妙</button>
+        <button class="grade-btn g3" data-q="5">覚えてた</button>
+      </div>`;
   }
-  cardEl.innerHTML = `
-    <div class="review-q">${escapeHtml(c.question)}</div>
-    <div class="review-a" id="revA">
-      <strong>${escapeHtml(c.answer)}</strong>
-      ${c.principleText ? '<div style="margin-top:8px;font-size:13px;">'+escapeHtml(c.principleText)+'</div>' : ''}
-      ${principleImgHtml}
-    </div>
-    <button class="ghost reveal-btn" id="revealBtn">答えを見る</button>
-    <div class="grade-row" id="gradeRow">
-      <button class="grade-btn g1" data-q="2">忘れた</button>
-      <button class="grade-btn g2" data-q="3">微妙</button>
-      <button class="grade-btn g3" data-q="5">覚えてた</button>
-    </div>`;
+
   document.getElementById('revealBtn').addEventListener('click',()=>{
     document.getElementById('revA').classList.add('show');
     document.getElementById('gradeRow').classList.add('show');
     document.getElementById('revealBtn').style.display='none';
   });
   cardEl.querySelectorAll('.grade-btn').forEach(b=> b.addEventListener('click', async ()=>{
-    await gradeCard(c, parseInt(b.dataset.q)); reviewIdx++; renderReview();
+    await gradeItem(item, parseInt(b.dataset.q)); reviewIdx++; renderReview();
   }));
 }
-async function gradeCard(c, quality){
-  if(quality<3){ c.repetition=0; c.interval=1; }
+async function gradeItem(item, quality){
+  const d = item.data;
+  if(quality<3){ d.repetition=0; d.interval=1; }
   else{
-    if(c.repetition===0) c.interval=1;
-    else if(c.repetition===1) c.interval=6;
-    else c.interval=Math.round(c.interval*c.efactor);
-    c.repetition+=1;
+    if(d.repetition===0) d.interval=1;
+    else if(d.repetition===1) d.interval=6;
+    else d.interval=Math.round(d.interval*d.efactor);
+    d.repetition+=1;
   }
-  c.efactor = c.efactor + (0.1 - (5-quality)*(0.08+(5-quality)*0.02));
-  if(c.efactor<1.3) c.efactor=1.3;
-  const next = new Date(); next.setDate(next.getDate()+c.interval);
-  c.nextReview = next.toISOString().slice(0,10);
-  await sb.from('cards').update({ interval:c.interval, repetition:c.repetition, efactor:c.efactor, next_review:c.nextReview }).eq('id', c.id);
+  d.efactor = d.efactor + (0.1 - (5-quality)*(0.08+(5-quality)*0.02));
+  if(d.efactor<1.3) d.efactor=1.3;
+  const next = new Date(); next.setDate(next.getDate()+d.interval);
+  d.nextReview = next.toISOString().slice(0,10);
+  const table = item.kind==='normal' ? 'cards' : 'vignettes';
+  await sb.from(table).update({ interval:d.interval, repetition:d.repetition, efactor:d.efactor, next_review:d.nextReview }).eq('id', d.id);
 }
 </script>
 </body>
