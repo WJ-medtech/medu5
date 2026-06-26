@@ -48,6 +48,7 @@
   button.primary{width:100%;margin-top:14px;background:var(--primary);color:#fff;border:none;padding:13px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 10px rgba(79,174,133,0.3);}
   button.primary.small{padding:9px;font-size:13px;margin-top:8px;}
   button.ghost{background:none;border:1px solid var(--border);color:var(--text-soft);padding:9px 14px;border-radius:10px;font-size:13px;cursor:pointer;font-weight:600;width:100%;margin-top:8px;}
+  button.ghost:disabled{opacity:0.35;cursor:default;}
   .copybox{background:#f3fbf7;border:1px dashed var(--primary);border-radius:10px;padding:10px;font-size:12px;color:var(--text);white-space:pre-wrap;line-height:1.5;position:relative;}
   .copybox .copybtn{position:absolute;top:6px;right:6px;background:var(--primary);color:#fff;border:none;border-radius:7px;font-size:11px;padding:4px 8px;cursor:pointer;}
   .file-row{display:flex;align-items:center;gap:10px;margin-top:6px;}
@@ -76,6 +77,8 @@
   .tag{display:inline-block;font-size:10.5px;background:var(--primary-light);color:var(--primary-dark);padding:2px 8px;border-radius:8px;margin-right:4px;}
   .tag.doubt{background:#fdeee7;color:#b8552f;}
   .tag.vignette{background:#eaf0fd;color:#3a5fb8;}
+  .tag.principle{background:#eef0ff;color:#5b4fd1;}
+  .tag.memorized{background:#fff3d6;color:#a8780a;}
   .empty{text-align:center;color:var(--text-soft);font-size:13px;padding:40px 10px;}
   .principle-edit{display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px;}
   .principle-edit.show{display:block;}
@@ -197,6 +200,11 @@ A: 簡潔な答え
       <label style="margin-top:18px;">または1枚だけ手動追加</label>
       <input type="text" id="manQN" placeholder="質問">
       <input type="text" id="manAN" placeholder="答え" style="margin-top:8px;">
+      <label>写真(任意)</label>
+      <div class="file-row">
+        <input type="file" id="manImgN" accept="image/*">
+        <img id="manImgNPreview" style="display:none;">
+      </div>
       <button class="primary small" id="manAddBtnN">このカードを追加</button>
       <div class="msg" id="manMsgN"></div>
     </div>
@@ -360,6 +368,7 @@ let pendingPreviewD = [];
 let reviewQueue = [];
 let reviewIdx = 0;
 let doubtImgFile = null;
+let manImgNFile = null;
 let vignQFile = null;
 let vignAFile = null;
 
@@ -466,6 +475,7 @@ async function getSignedUrl(path){
 // ---------- mapping ----------
 function mapCard(r){ return {id:r.id, subject:r.subject, chapter:r.chapter, question:r.question, answer:r.answer,
   principleType:r.principle_type, principleText:r.principle_text, principleImagePath:r.principle_image_path,
+  questionImagePath:r.question_image_path, memorized:r.memorized,
   interval:r.interval, repetition:r.repetition, efactor:r.efactor, nextReview:r.next_review, createdAt:r.created_at}; }
 function mapDoubt(r){ return {id:r.id, subject:r.subject, chapter:r.chapter, question:r.question, answer:r.answer, imagePath:r.image_path, createdAt:r.created_at}; }
 function mapVignette(r){ return {id:r.id, subject:r.subject, chapter:r.chapter, questionImagePath:r.question_image_path, answerImagePath:r.answer_image_path,
@@ -634,6 +644,13 @@ async function commitPreviewN(){
   document.getElementById('pasteInputN').value=''; document.getElementById('parseMsgN').classList.remove('show');
   await loadAll(); alert('保存しました!');
 }
+document.getElementById('manImgN').addEventListener('change',(e)=>{
+  const file = e.target.files[0]; if(!file) return;
+  manImgNFile = file;
+  const reader = new FileReader();
+  reader.onload = ()=>{ const prev = document.getElementById('manImgNPreview'); prev.src = reader.result; prev.style.display='block'; };
+  reader.readAsDataURL(file);
+});
 document.getElementById('manAddBtnN').addEventListener('click', async ()=>{
   const q = document.getElementById('manQN').value.trim();
   const a = document.getElementById('manAN').value.trim();
@@ -641,12 +658,23 @@ document.getElementById('manAddBtnN').addEventListener('click', async ()=>{
   const today = todayStr();
   const subject = subjectSelect.value, chapter = chapterSelect.value;
   await saveChapterTitleIfNeeded(subject, chapter, chapterTitleInput.value.trim());
-  const { error } = await sb.from('cards').insert([{
-    user_id: currentUser.id, subject, chapter, question:q, answer:a,
-    principle_type:'none', interval:0, repetition:0, efactor:2.5, next_review:today, created_at:today
-  }]);
-  if(error){ alert('保存エラー: '+error.message); return; }
+  const id = crypto.randomUUID();
+  let questionImagePath = null;
+  try{
+    if(manImgNFile){
+      questionImagePath = `${currentUser.id}/cards/${id}.jpg`;
+      await uploadImage(manImgNFile, questionImagePath);
+    }
+    const { error } = await sb.from('cards').insert([{
+      id, user_id: currentUser.id, subject, chapter, question:q, answer:a,
+      principle_type:'none', question_image_path:questionImagePath,
+      interval:0, repetition:0, efactor:2.5, next_review:today, created_at:today
+    }]);
+    if(error) throw error;
+  }catch(e){ alert('保存エラー: '+e.message); return; }
   document.getElementById('manQN').value=''; document.getElementById('manAN').value='';
+  document.getElementById('manImgN').value=''; document.getElementById('manImgNPreview').style.display='none';
+  manImgNFile = null;
   const msg = document.getElementById('manMsgN'); msg.textContent='追加しました'; msg.classList.add('show');
   setTimeout(()=>msg.classList.remove('show'),1500);
   await loadAll();
@@ -810,12 +838,19 @@ function renderStats(){
 function cardItemHtml(c){
   return `
     <div class="card-item">
+      <div>
+        ${c.principleType && c.principleType!=='none' ? '<span class="tag principle">原理</span>' : ''}
+        ${c.memorized ? '<span class="tag memorized">暗記</span>' : ''}
+      </div>
       <div class="q">${escapeHtml(c.question)}</div>
+      ${c.questionImagePath ? '<img class="thumb" id="qimg-'+c.id+'">' : ''}
       <div class="a" id="a-${c.id}">${escapeHtml(c.answer)}</div>
       <div class="btn-row">
         <button data-act="toggle" data-id="${c.id}">答え</button>
         <button data-act="principle" data-id="${c.id}">原理を見る</button>
         <button data-act="edit-principle" data-id="${c.id}">原理を追加</button>
+        <button data-act="edit-img" data-id="${c.id}">写真を追加</button>
+        <button data-act="toggle-memorized" data-id="${c.id}">${c.memorized ? '暗記を外す' : '暗記にする'}</button>
         <button data-act="delete" data-id="${c.id}">削除</button>
       </div>
       <div class="principle-edit" id="pe-${c.id}">
@@ -824,6 +859,11 @@ function cardItemHtml(c){
         <label>または写真</label>
         <div class="file-row"><input type="file" accept="image/*" id="pe-file-${c.id}"></div>
         <button class="primary small" data-act="save-principle" data-id="${c.id}">保存</button>
+      </div>
+      <div class="principle-edit" id="qe-${c.id}">
+        <label>カードの写真</label>
+        <div class="file-row"><input type="file" accept="image/*" id="qe-file-${c.id}"></div>
+        <button class="primary small" data-act="save-img" data-id="${c.id}">保存</button>
       </div>
       <div class="meta"><span>次回: ${c.nextReview}</span><span>復習${c.repetition}回</span></div>
     </div>`;
@@ -874,6 +914,34 @@ function renderList(){
     }catch(e){ alert('保存エラー: '+e.message); return; }
     await loadAll();
   }));
+  wrap.querySelectorAll('[data-act=edit-img]').forEach(b=> b.addEventListener('click',()=> document.getElementById('qe-'+b.dataset.id).classList.toggle('show')));
+  wrap.querySelectorAll('[data-act=save-img]').forEach(b=> b.addEventListener('click', async ()=>{
+    const id = b.dataset.id;
+    const fileInput = document.getElementById('qe-file-'+id);
+    const file = fileInput.files[0];
+    if(!file){ alert('写真を選択してください'); return; }
+    try{
+      const path = `${currentUser.id}/cards/${id}.jpg`;
+      await uploadImage(file, path);
+      const { error } = await sb.from('cards').update({ question_image_path:path }).eq('id', id);
+      if(error) throw error;
+    }catch(e){ alert('保存エラー: '+e.message); return; }
+    await loadAll();
+  }));
+  wrap.querySelectorAll('[data-act=toggle-memorized]').forEach(b=> b.addEventListener('click', async ()=>{
+    const id = b.dataset.id;
+    const c = cards.find(x=>x.id===id); if(!c) return;
+    const { error } = await sb.from('cards').update({ memorized: !c.memorized }).eq('id', id);
+    if(error){ alert('保存エラー: '+error.message); return; }
+    await loadAll();
+  }));
+  list.forEach(async c=>{
+    if(c.questionImagePath){
+      const url = await getSignedUrl(c.questionImagePath);
+      const img = document.getElementById('qimg-'+c.id);
+      if(img && url) img.src = url;
+    }
+  });
 }
 
 async function showPrincipleModal(id){
@@ -1051,6 +1119,17 @@ async function renderReview(){
   cardEl.querySelectorAll('.grade-btn').forEach(b=> b.addEventListener('click', async ()=>{
     await gradeItem(item, parseInt(b.dataset.q)); reviewIdx++; renderReview();
   }));
+
+  cardEl.insertAdjacentHTML('beforeend', `
+    <div class="btn-row" style="margin-top:14px;">
+      <button class="ghost" id="prevBtn" ${reviewIdx===0 ? 'disabled' : ''} style="margin-top:0;">← 前</button>
+      <button class="ghost" id="nextBtn" ${reviewIdx>=reviewQueue.length-1 ? 'disabled' : ''} style="margin-top:0;">次 →</button>
+    </div>
+  `);
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  if(prevBtn) prevBtn.addEventListener('click', ()=>{ if(reviewIdx>0){ reviewIdx--; renderReview(); } });
+  if(nextBtn) nextBtn.addEventListener('click', ()=>{ if(reviewIdx<reviewQueue.length-1){ reviewIdx++; renderReview(); } });
 }
 async function gradeItem(item, quality){
   const d = item.data;
