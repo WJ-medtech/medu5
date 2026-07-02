@@ -851,7 +851,15 @@ function cardItemHtml(c){
         <button data-act="edit-principle" data-id="${c.id}">原理を追加</button>
         <button data-act="edit-img" data-id="${c.id}">写真を追加</button>
         <button data-act="toggle-memorized" data-id="${c.id}">${c.memorized ? '暗記を外す' : '暗記にする'}</button>
+        <button data-act="move" data-id="${c.id}">移動</button>
         <button data-act="delete" data-id="${c.id}">削除</button>
+      </div>
+      <div class="principle-edit" id="mv-${c.id}">
+        <label>移動先の科目</label>
+        <select id="mv-subj-${c.id}"></select>
+        <label>移動先のChapter</label>
+        <select id="mv-chap-${c.id}"></select>
+        <button class="primary small" data-act="save-move" data-id="${c.id}">この場所に移動する</button>
       </div>
       <div class="principle-edit" id="pe-${c.id}">
         <label>原理・解説(文章)</label>
@@ -912,6 +920,31 @@ function renderList(){
         if(error) throw error;
       } else { alert('文章か写真のどちらかを入力してください'); return; }
     }catch(e){ alert('保存エラー: '+e.message); return; }
+    await loadAll();
+  }));
+  wrap.querySelectorAll('[data-act=move]').forEach(b=>{
+    b.addEventListener('click',()=>{
+      const id = b.dataset.id;
+      const panel = document.getElementById('mv-'+id);
+      panel.classList.toggle('show');
+      if(panel.classList.contains('show')){
+        const subjSel = document.getElementById('mv-subj-'+id);
+        const chapSel = document.getElementById('mv-chap-'+id);
+        const c = cards.find(x=>x.id===id);
+        fillSubjectSelect(subjSel, false);
+        subjSel.value = c.subject;
+        fillChapterSelect(chapSel, subjSel.value);
+        chapSel.value = c.chapter;
+        subjSel.addEventListener('change',()=> fillChapterSelect(chapSel, subjSel.value));
+      }
+    });
+  });
+  wrap.querySelectorAll('[data-act=save-move]').forEach(b=> b.addEventListener('click', async ()=>{
+    const id = b.dataset.id;
+    const newSubj = document.getElementById('mv-subj-'+id).value;
+    const newChap = document.getElementById('mv-chap-'+id).value;
+    const { error } = await sb.from('cards').update({ subject:newSubj, chapter:newChap }).eq('id', id);
+    if(error){ alert('保存エラー: '+error.message); return; }
     await loadAll();
   }));
   wrap.querySelectorAll('[data-act=edit-img]').forEach(b=> b.addEventListener('click',()=> document.getElementById('qe-'+b.dataset.id).classList.toggle('show')));
@@ -1081,6 +1114,11 @@ async function renderReview(){
       principleImgHtml = `<img src="${url}" style="max-width:100%;border-radius:10px;margin-top:8px;">`;
     }
     cardEl.innerHTML = `
+      <div style="text-align:center;margin-bottom:6px;">
+        ${c.principleType && c.principleType!=='none' ? '<span class="tag principle">原理</span>' : ''}
+        ${c.memorized ? '<span class="tag memorized">暗記</span>' : ''}
+        <span style="font-size:11px;color:var(--text-soft);">${c.subject} ${chapterLabel(c.subject,c.chapter)}</span>
+      </div>
       <div class="review-q">${escapeHtml(c.question)}</div>
       <div class="review-a" id="revA">
         <strong>${escapeHtml(c.answer)}</strong>
