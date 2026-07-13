@@ -108,6 +108,237 @@
   .auth-box p{font-size:12.5px;color:var(--text-soft);margin:0 0 16px;line-height:1.6;}
   .auth-sub{margin-top:18px;border-top:1px solid var(--border);padding-top:14px;}
   .auth-sub p{font-size:11px;}
+
+  /* ===================== BRIDGE(艦橋) ===================== */
+  #page-bridge{
+    --hull:#0b1622; --panel:#13202d; --panel-hi:#1a2c3d;
+    --etch:#263d52; --readout:#7fe3d4; --caution:#e8a33d;
+    --nominal:#4FAE85; --alert:#e0735c;
+    --label:#7d99ad; --ink:#dceaf2;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Courier New",monospace;
+  }
+  #page-bridge .panel{
+    background:var(--panel);
+    border:1px solid var(--etch);
+    border-radius:14px;
+    padding:16px;
+    margin-bottom:12px;
+    position:relative;
+    overflow:hidden;
+  }
+  #page-bridge .panel::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(180deg,rgba(255,255,255,0.045),transparent 42%);
+  }
+  #page-bridge .eyebrow{
+    font-family:var(--mono);font-size:10px;letter-spacing:0.22em;
+    color:var(--label);text-transform:uppercase;margin-bottom:10px;
+    display:flex;align-items:center;gap:8px;
+  }
+  #page-bridge .eyebrow::after{content:"";flex:1;height:1px;background:var(--etch);}
+
+  /* ---- ミッション(操縦席) ---- */
+  #page-bridge .clock{
+    background:linear-gradient(180deg,#0a121a,var(--hull));
+    border:1px solid var(--etch);
+    padding:0;
+  }
+  /* キャノピー(操縦席の窓) */
+  #page-bridge .canopy{position:relative;display:block;}
+  #page-bridge .canopy svg{display:block;width:100%;height:auto;}
+  #page-bridge .hud{
+    position:absolute;left:0;right:0;top:14%;bottom:0;pointer-events:none;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+  }
+  #page-bridge .hud .dnum{
+    font-family:var(--mono);font-size:46px;font-weight:700;line-height:1;
+    color:var(--readout);letter-spacing:0.06em;font-variant-numeric:tabular-nums;
+    text-shadow:0 0 26px rgba(127,227,212,0.55),0 2px 10px #000;
+  }
+  #page-bridge .hud .dunit{
+    font-family:var(--mono);font-size:9px;letter-spacing:0.28em;color:#9fc4d4;
+    margin-top:6px;text-transform:uppercase;text-shadow:0 2px 8px #000;
+  }
+  #page-bridge .hud .mname{
+    position:absolute;top:2.5%;left:28%;right:28%;text-align:center;
+    font-size:11px;font-weight:700;color:var(--ink);letter-spacing:0.02em;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  #page-bridge .hud .lamp-status{
+    position:absolute;bottom:2px;left:50%;transform:translateX(-50%);
+    font-family:var(--mono);font-size:9px;letter-spacing:0.16em;text-transform:uppercase;
+    padding:3px 10px;border-radius:20px;border:1px solid currentColor;
+    background:rgba(5,11,18,0.6);
+  }
+  #page-bridge .hud .lamp-status.nominal{color:var(--nominal);}
+  #page-bridge .hud .lamp-status.caution{color:var(--caution);}
+  #page-bridge .hud .lamp-status.alert{color:var(--alert);}
+
+  /* コンソール(窓の下) */
+  #page-bridge .console{padding:16px;}
+  /* 中央ホロディスプレイ */
+  #page-bridge .holo{position:relative;width:158px;margin:2px auto 2px;}
+  #page-bridge .holo svg{display:block;width:100%;height:auto;}
+  #page-bridge .holo .core{
+    position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;pointer-events:none;
+  }
+  #page-bridge .holo .pct{
+    font-family:var(--mono);font-size:26px;font-weight:700;color:var(--readout);
+    line-height:1;font-variant-numeric:tabular-nums;text-shadow:0 0 16px rgba(127,227,212,0.5);
+  }
+  #page-bridge .holo .cap{
+    font-family:var(--mono);font-size:9px;color:var(--label);margin-top:5px;letter-spacing:0.1em;
+  }
+
+  /* 必要ペース vs 目標ペース */
+  #page-bridge .pace{display:flex;gap:8px;margin-top:14px;}
+  #page-bridge .pace>div{
+    flex:1;text-align:center;background:var(--hull);border:1px solid var(--etch);
+    border-radius:10px;padding:10px 4px;
+  }
+  #page-bridge .pace .k{font-family:var(--mono);font-size:8.5px;letter-spacing:0.12em;color:var(--label);text-transform:uppercase;}
+  #page-bridge .pace .v{font-family:var(--mono);font-size:19px;font-weight:700;margin-top:5px;line-height:1;font-variant-numeric:tabular-nums;}
+  #page-bridge .pace .v small{font-size:9.5px;color:var(--label);font-weight:400;}
+  #page-bridge .pace .req .v{color:var(--caution);}
+  #page-bridge .pace .goal .v,#page-bridge .pace .left .v{color:var(--ink);}
+  #page-bridge .pace.nominal .req .v{color:var(--nominal);}
+  #page-bridge .pace.alert .req .v{color:var(--alert);}
+
+  #page-bridge .mission-foot{
+    display:flex;justify-content:space-between;align-items:center;margin-top:12px;
+    font-family:var(--mono);font-size:10px;color:var(--label);
+  }
+  #page-bridge .mission-foot button{
+    background:transparent;border:1px solid var(--etch);color:var(--label);
+    border-radius:8px;padding:5px 10px;font-size:10px;font-family:var(--mono);
+    letter-spacing:0.1em;cursor:pointer;text-transform:uppercase;flex-shrink:0;
+  }
+  #page-bridge .mission-foot button:hover{border-color:var(--readout);color:var(--readout);}
+
+  /* ---- ミッション設定モーダル ---- */
+  #missionModal .modal{background:#13202d;border:1px solid #263d52;color:#dceaf2;}
+  #missionModal h4{color:#7fe3d4;}
+  #missionModal label{color:#7d99ad;}
+  #missionModal input[type=text],#missionModal input[type=date],#missionModal input[type=number]{
+    background:#0b1622;border:1px solid #263d52;color:#dceaf2;
+  }
+  #missionModal .subjpick{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:8px;}
+  #missionModal .subjpick span{
+    text-align:center;font-size:11px;padding:7px 2px;border-radius:8px;
+    border:1px solid #263d52;color:#7d99ad;cursor:pointer;user-select:none;
+  }
+  #missionModal .subjpick span.on{background:rgba(127,227,212,0.12);border-color:#7fe3d4;color:#7fe3d4;font-weight:700;}
+  #missionModal .close{background:#7fe3d4;color:#0b1622;}
+
+  /* ---- 本日の任務 ---- */
+  #page-bridge .orders{display:flex;gap:10px;}
+  #page-bridge .order{
+    flex:1;background:var(--hull);border:1px solid var(--etch);border-radius:11px;padding:12px;
+  }
+  #page-bridge .order .k{font-family:var(--mono);font-size:9.5px;letter-spacing:0.16em;color:var(--label);text-transform:uppercase;}
+  #page-bridge .order .v{
+    font-family:var(--mono);font-size:30px;font-weight:700;color:var(--ink);margin-top:6px;line-height:1;
+    font-variant-numeric:tabular-nums;
+  }
+  #page-bridge .order .v small{font-size:13px;color:var(--label);font-weight:400;}
+  #page-bridge .order .bar{height:4px;background:#0a1017;border-radius:3px;margin-top:10px;overflow:hidden;}
+  #page-bridge .order .bar>i{display:block;height:100%;border-radius:3px;transition:width .5s ease;}
+  #page-bridge .order.due .bar>i{background:var(--caution);}
+  #page-bridge .order.new .bar>i{background:var(--nominal);}
+  #page-bridge .order.done .v{color:var(--nominal);}
+
+  #page-bridge .launch{
+    width:100%;margin-top:12px;padding:14px;border-radius:11px;border:1px solid var(--readout);
+    background:rgba(127,227,212,0.09);color:var(--readout);
+    font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:0.14em;
+    cursor:pointer;text-transform:uppercase;
+  }
+  #page-bridge .launch:hover{background:rgba(127,227,212,0.16);}
+  #page-bridge .launch.secondary{
+    border-color:var(--etch);background:transparent;color:var(--label);margin-top:8px;
+  }
+  #page-bridge .launch.secondary:hover{background:var(--panel-hi);color:var(--ink);}
+  #page-bridge .launch.secondary b{color:var(--caution);font-weight:700;}
+  #page-bridge .launch:disabled{opacity:.35;cursor:default;}
+
+  /* ---- ストリーク ---- */
+  #page-bridge .streak-head{display:flex;align-items:baseline;justify-content:space-between;}
+  #page-bridge .streak-num{
+    font-family:var(--mono);font-size:34px;font-weight:700;color:var(--caution);line-height:1;
+    font-variant-numeric:tabular-nums;
+  }
+  #page-bridge .streak-num small{font-size:12px;color:var(--label);font-weight:400;margin-left:4px;}
+  #page-bridge .streak-total{font-family:var(--mono);font-size:12px;color:var(--label);text-align:right;}
+  #page-bridge .streak-total b{color:var(--ink);font-size:16px;font-weight:700;}
+  #page-bridge .strip{display:flex;gap:3px;margin-top:14px;}
+  #page-bridge .strip i{
+    flex:1;height:22px;border-radius:3px;background:var(--hull);border:1px solid var(--etch);
+  }
+  #page-bridge .strip i.on{background:var(--caution);border-color:var(--caution);box-shadow:0 0 8px rgba(232,163,61,0.4);}
+  #page-bridge .strip i.today{outline:1px solid var(--readout);outline-offset:1px;}
+
+  /* ---- SYSTEMS(24科目) ---- */
+  #page-bridge .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+  #page-bridge .cell{
+    background:var(--hull);border:1px solid var(--etch);border-radius:9px;
+    padding:8px 5px 6px;cursor:pointer;text-align:center;position:relative;
+    transition:transform .12s ease,border-color .2s ease;
+  }
+  #page-bridge .cell:hover{transform:translateY(-2px);border-color:var(--readout);}
+  #page-bridge .cell.sel{border-color:var(--readout);background:var(--panel-hi);}
+  #page-bridge .cell .nm{font-size:10.5px;font-weight:700;color:var(--label);line-height:1.25;min-height:26px;display:flex;align-items:center;justify-content:center;}
+  #page-bridge .cell.lit .nm{color:var(--ink);}
+  #page-bridge .cell .ch{font-family:var(--mono);font-size:9px;color:var(--label);margin-top:2px;}
+  #page-bridge .cell .lamp{height:3px;border-radius:2px;background:#0a1017;margin-top:6px;overflow:hidden;}
+  #page-bridge .cell .lamp>i{display:block;height:100%;background:var(--nominal);border-radius:2px;}
+  #page-bridge .cell.full{border-color:var(--nominal);}
+  /* ミッション対象科目は上辺に標識を出す */
+  #page-bridge .cell.tgt::after{
+    content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);
+    width:16px;height:2px;background:var(--caution);border-radius:0 0 2px 2px;
+  }
+  #page-bridge .cell.full.tgt::after{background:var(--nominal);}
+  #page-bridge .cell.full .lamp>i{box-shadow:0 0 8px rgba(79,174,133,0.7);}
+
+  @keyframes boot{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  #page-bridge .cell{animation:boot .28s ease backwards;}
+
+  /* ---- chapter内訳 ---- */
+  #page-bridge .chaps{margin-top:12px;border-top:1px solid var(--etch);padding-top:12px;display:none;}
+  #page-bridge .chaps.show{display:block;}
+  #page-bridge .chap{
+    display:flex;align-items:center;gap:9px;padding:8px 4px;border-bottom:1px solid rgba(38,61,82,0.5);cursor:pointer;
+  }
+  #page-bridge .chap:last-child{border-bottom:none;}
+  #page-bridge .chap:hover{background:var(--panel-hi);}
+  #page-bridge .chap .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;border:1px solid var(--etch);background:transparent;}
+  #page-bridge .chap.part .dot{background:var(--caution);border-color:var(--caution);}
+  #page-bridge .chap.solid .dot{background:var(--nominal);border-color:var(--nominal);box-shadow:0 0 7px rgba(79,174,133,0.6);}
+  #page-bridge .chap .t{flex:1;font-size:12px;color:var(--label);line-height:1.4;}
+  #page-bridge .chap.part .t,#page-bridge .chap.solid .t{color:var(--ink);}
+  #page-bridge .chap .n{font-family:var(--mono);font-size:10px;color:var(--label);font-variant-numeric:tabular-nums;}
+
+  /* ---- 艦橋にいる間は画面全体を艦内に ---- */
+  body.bridge-mode{
+    background:linear-gradient(180deg,#0e1b28,#0b1622 40%,#0b1622);
+  }
+  body.bridge-mode header h1{color:#dceaf2;}
+  body.bridge-mode header .sub{color:#7d99ad;}
+  body.bridge-mode .logout-btn{border-color:#263d52;color:#7d99ad;background:transparent;}
+  body.bridge-mode .tabs{background:#13202d;border:1px solid #263d52;box-shadow:none;}
+  body.bridge-mode .tab{color:#7d99ad;}
+  body.bridge-mode .tab.active{background:#7fe3d4;color:#0b1622;}
+  body.bridge-mode .logo{box-shadow:0 4px 14px rgba(0,0,0,0.5);}
+  body{transition:background .35s ease;}
+
+  @media (prefers-reduced-motion:reduce){
+    #page-bridge .cell{animation:none;}
+    #page-bridge .order .bar>i{transition:none;}
+    body{transition:none;}
+  }
+  /* =================== /BRIDGE =================== */
+
 </style>
 </head>
 <body>
@@ -139,13 +370,207 @@
 </header>
 
 <div class="tabs">
-  <div class="tab active" data-tab="input">入力</div>
+  <div class="tab active" data-tab="bridge">艦橋</div>
+  <div class="tab" data-tab="input">入力</div>
   <div class="tab" data-tab="list">一覧</div>
   <div class="tab" data-tab="review">復習</div>
 </div>
 
+<!-- 艦橋 -->
+<div class="page active" id="page-bridge">
+
+  <div class="panel clock">
+
+    <div class="canopy">
+      <svg viewBox="0 0 360 184" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <radialGradient id="gx" cx="50%" cy="50%">
+            <stop offset="0%" stop-color="#fff5e0" stop-opacity=".95"/>
+            <stop offset="18%" stop-color="#cfd8f5" stop-opacity=".5"/>
+            <stop offset="55%" stop-color="#5c6fa8" stop-opacity=".22"/>
+            <stop offset="100%" stop-color="#0a1220" stop-opacity="0"/>
+          </radialGradient>
+          <radialGradient id="pl" cx="34%" cy="28%">
+            <stop offset="0%" stop-color="#a8cfe4"/>
+            <stop offset="30%" stop-color="#5b89a8"/>
+            <stop offset="68%" stop-color="#274257"/>
+            <stop offset="100%" stop-color="#0b141d"/>
+          </radialGradient>
+          <radialGradient id="neb" cx="50%" cy="60%">
+            <stop offset="0%" stop-color="#2c4d78" stop-opacity=".45"/>
+            <stop offset="100%" stop-color="#0a1220" stop-opacity="0"/>
+          </radialGradient>
+          <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#7fe3d4" stop-opacity=".10"/>
+            <stop offset="45%" stop-color="#7fe3d4" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="strut" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#243c50"/>
+            <stop offset="100%" stop-color="#0a121a"/>
+          </linearGradient>
+          <clipPath id="cL"><path d="M6,74 L102,52 L102,156 L6,174 Z"/></clipPath>
+          <clipPath id="cC"><path d="M116,50 L132,40 L228,40 L244,50 L244,154 L228,164 L132,164 L116,154 Z"/></clipPath>
+          <clipPath id="cR"><path d="M258,52 L354,74 L354,174 L258,156 Z"/></clipPath>
+        </defs>
+
+        <rect x="0" y="0" width="360" height="184" fill="url(#strut)"/>
+
+        <!-- 上部の計器帯 -->
+        <g>
+          <rect x="10" y="9" width="28" height="8" rx="2" fill="#7fe3d4" opacity=".5"/>
+          <rect x="42" y="9" width="13" height="8" rx="2" fill="#7fe3d4" opacity=".22"/>
+          <rect x="59" y="9" width="20" height="8" rx="2" fill="#7fe3d4" opacity=".35"/>
+          <rect x="83" y="9" width="10" height="8" rx="2" fill="#7fe3d4" opacity=".15"/>
+          <rect x="267" y="9" width="10" height="8" rx="2" fill="#7fe3d4" opacity=".15"/>
+          <rect x="281" y="9" width="20" height="8" rx="2" fill="#7fe3d4" opacity=".35"/>
+          <rect x="305" y="9" width="13" height="8" rx="2" fill="#7fe3d4" opacity=".22"/>
+          <rect x="322" y="9" width="28" height="8" rx="2" fill="#7fe3d4" opacity=".5"/>
+          <rect x="8" y="24" width="344" height="1" fill="#7fe3d4" opacity=".12"/>
+        </g>
+
+        <!-- 左窓: 銀河 -->
+        <g clip-path="url(#cL)">
+          <rect x="0" y="40" width="120" height="144" fill="#050a12"/>
+          <ellipse cx="52" cy="104" rx="46" ry="30" fill="url(#gx)" transform="rotate(-18 52 104)"/>
+          <g fill="#fff">
+            <circle cx="18" cy="82" r="1.1"/><circle cx="34" cy="142" r=".8"/><circle cx="78" cy="68" r="1"/>
+            <circle cx="92" cy="128" r="1.2"/><circle cx="24" cy="118" r=".7"/><circle cx="66" cy="152" r=".9"/>
+            <circle cx="96" cy="92" r=".7"/><circle cx="12" cy="156" r=".8"/>
+          </g>
+        </g>
+
+        <!-- 中央窓: 深宇宙 -->
+        <g clip-path="url(#cC)">
+          <rect x="110" y="36" width="140" height="132" fill="#050a12"/>
+          <ellipse cx="180" cy="116" rx="70" ry="50" fill="url(#neb)"/>
+          <g fill="#fff">
+            <circle cx="132" cy="62" r="1"/><circle cx="152" cy="88" r=".8"/><circle cx="171" cy="54" r="1.3"/>
+            <circle cx="196" cy="76" r=".9"/><circle cx="220" cy="60" r="1.1"/><circle cx="236" cy="98" r=".8"/>
+            <circle cx="126" cy="112" r=".9"/><circle cx="146" cy="144" r="1.2"/><circle cx="168" cy="128" r=".7"/>
+            <circle cx="190" cy="152" r="1"/><circle cx="214" cy="134" r=".9"/><circle cx="234" cy="150" r=".8"/>
+            <circle cx="204" cy="110" r=".7"/><circle cx="160" cy="104" r=".6"/><circle cx="228" cy="120" r=".6"/>
+          </g>
+          <circle cx="171" cy="54" r="3.2" fill="#fff" opacity=".2"/>
+        </g>
+
+        <!-- 右窓: 惑星 -->
+        <g clip-path="url(#cR)">
+          <rect x="240" y="40" width="120" height="144" fill="#050a12"/>
+          <circle cx="336" cy="104" r="54" fill="url(#pl)"/>
+          <ellipse cx="336" cy="104" rx="70" ry="11" fill="none" stroke="#a8cfe4" stroke-width="1" opacity=".5" transform="rotate(-14 336 104)"/>
+          <circle cx="292" cy="150" r="9" fill="#3b5a70"/>
+          <g fill="#fff">
+            <circle cx="268" cy="74" r="1"/><circle cx="284" cy="120" r=".8"/><circle cx="270" cy="162" r="1.1"/>
+            <circle cx="296" cy="60" r=".7"/><circle cx="264" cy="112" r=".9"/>
+          </g>
+        </g>
+
+        <!-- ガラスの反射 -->
+        <g>
+          <path d="M6,74 L102,52 L102,156 L6,174 Z" fill="url(#glass)"/>
+          <path d="M116,50 L132,40 L228,40 L244,50 L244,154 L228,164 L132,164 L116,154 Z" fill="url(#glass)"/>
+          <path d="M258,52 L354,74 L354,174 L258,156 Z" fill="url(#glass)"/>
+        </g>
+
+        <!-- 窓枠のベゼル -->
+        <g fill="none" stroke="#3d6580" stroke-width="1.3">
+          <path d="M6,74 L102,52 L102,156 L6,174 Z"/>
+          <path d="M116,50 L132,40 L228,40 L244,50 L244,154 L228,164 L132,164 L116,154 Z"/>
+          <path d="M258,52 L354,74 L354,174 L258,156 Z"/>
+        </g>
+        <g fill="none" stroke="#7fe3d4" stroke-width=".8" opacity=".3">
+          <path d="M132,40 L228,40"/>
+          <path d="M102,52 L102,156"/>
+          <path d="M258,52 L258,156"/>
+        </g>
+      </svg>
+
+      <div class="hud">
+        <div class="mname" id="mTitle">ミッション未設定</div>
+        <div class="dnum" id="clockNum">--</div>
+        <div class="dunit" id="clockUnit">Days remaining</div>
+        <div class="lamp-status nominal" id="mLamp">nominal</div>
+      </div>
+    </div>
+
+    <div class="console">
+      <!-- 中央ホロディスプレイ: ミッション進捗 -->
+      <div class="holo">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <g fill="none" stroke="#7fe3d4">
+            <circle cx="100" cy="100" r="92" stroke-opacity=".10"/>
+            <circle cx="100" cy="100" r="74" stroke-opacity=".14"/>
+            <circle cx="100" cy="100" r="52" stroke-opacity=".10"/>
+            <circle cx="100" cy="100" r="30" stroke-opacity=".08"/>
+            <path d="M100,8 L100,192 M8,100 L192,100" stroke-opacity=".10"/>
+            <path d="M35,35 L165,165 M165,35 L35,165" stroke-opacity=".05"/>
+          </g>
+          <!-- 目盛り(24科目) -->
+          <g id="holoTicks" stroke="#7fe3d4" stroke-width="2" stroke-opacity=".25"></g>
+          <!-- 進捗リング -->
+          <circle cx="100" cy="100" r="83" fill="none" stroke="#12222e" stroke-width="7"/>
+          <circle id="holoArc" cx="100" cy="100" r="83" fill="none" stroke="#7fe3d4" stroke-width="7"
+                  stroke-linecap="round" transform="rotate(-90 100 100)"
+                  stroke-dasharray="521.5" stroke-dashoffset="521.5"
+                  style="filter:drop-shadow(0 0 6px rgba(127,227,212,.7));transition:stroke-dashoffset .8s ease"/>
+        </svg>
+        <div class="core">
+          <div class="pct" id="holoPct">0%</div>
+          <div class="cap" id="holoCap">0 / 0 ch</div>
+        </div>
+      </div>
+
+      <div class="pace" id="paceRow">
+        <div class="left"><div class="k">残り</div><div class="v" id="mLeft">0<small> ch</small></div></div>
+        <div class="req"><div class="k">必要ペース</div><div class="v" id="mReq">0<small> ch/日</small></div></div>
+        <div class="goal"><div class="k">目標</div><div class="v" id="mGoal">3<small> ch/日</small></div></div>
+      </div>
+
+      <div class="mission-foot">
+        <span id="mProgress">国試まで --日</span>
+        <button id="btnEditMission">設定</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="panel">
+    <div class="eyebrow">本日の任務</div>
+    <div class="orders">
+      <div class="order due" id="orderDue">
+        <div class="k">復習 / Review</div>
+        <div class="v" id="dueNum">0<small> 枚</small></div>
+        <div class="bar"><i id="dueBar" style="width:0%"></i></div>
+      </div>
+      <div class="order new" id="orderNew">
+        <div class="k">新規開拓 / Chapters</div>
+        <div class="v" id="newNum">0<small> / 3</small></div>
+        <div class="bar"><i id="newBar" style="width:0%"></i></div>
+      </div>
+    </div>
+    <button class="launch" id="btnLaunchReview">復習を開始</button>
+    <button class="launch secondary" id="btnLaunchChapter">次の未開拓 → <b id="nextChapName">—</b></button>
+  </div>
+
+  <div class="panel">
+    <div class="eyebrow">航行記録</div>
+    <div class="streak-head">
+      <div class="streak-num" id="streakNum">0<small>日連続</small></div>
+      <div class="streak-total">総カード<br><b id="totalNum">0</b></div>
+    </div>
+    <div class="strip" id="strip14"></div>
+  </div>
+
+  <div class="panel">
+    <div class="eyebrow">Systems — 科目別 習熟度</div>
+    <div class="grid" id="sysGrid"></div>
+    <div class="chaps" id="sysChaps"></div>
+  </div>
+
+</div>
+
 <!-- 入力 -->
-<div class="page active" id="page-input">
+<div class="page" id="page-input">
 
   <div class="card" id="setPasswordCard">
     <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -347,6 +772,22 @@ A: (回答)
   <div class="review-card" id="reviewCard"><div class="empty">今日の復習対象はありません 🎉</div></div>
 </div>
 
+<div class="modal-overlay" id="missionModal">
+  <div class="modal">
+    <h4>ミッション設定</h4>
+    <label>ミッション名</label>
+    <input type="text" id="mfTitle" placeholder="例: 内科外科+整形 完了">
+    <label>期限</label>
+    <input type="date" id="mfDate">
+    <label>1日の目標chapter数</label>
+    <input type="number" id="mfGoal" min="1" max="20" step="1">
+    <label>対象の科目(タップで選択)</label>
+    <div class="subjpick" id="mfSubjects"></div>
+    <button class="primary" id="mfSave">このミッションで出航する</button>
+    <button class="close" id="mfClose">閉じる</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <h4 id="modalTitle">原理・解説</h4>
@@ -384,7 +825,13 @@ let vignQFile = null;
 let vignAFile = null;
 
 function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function todayStr(){ return new Date().toISOString().slice(0,10); }
+function dateStr(d){
+  const x = new Date(d);
+  return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;
+}
+function todayStr(){ return dateStr(new Date()); }
+let studyDays = {};   // { '2026-07-13': 12, ... } その日に採点した枚数
+let selectedSystem = null;
 
 // ---------- chapter titles ----------
 function ctKey(subject, chapter){ return subject+'||'+chapter; }
@@ -424,11 +871,13 @@ async function initAuth(){
 function showAuthScreen(){
   document.getElementById('authScreen').style.display='flex';
   document.getElementById('appRoot').style.display='none';
+  document.body.classList.remove('bridge-mode');
 }
 async function onLoggedIn(user){
   currentUser = user;
   document.getElementById('authScreen').style.display='none';
   document.getElementById('appRoot').style.display='block';
+  document.body.classList.add('bridge-mode');  // 起動時は艦橋
   await loadAll();
 }
 document.getElementById('loginBtn').addEventListener('click', async ()=>{
@@ -535,10 +984,18 @@ async function loadAll(){
   await backfillProgress('vignette_progress', 'vignette_id', vignContents, vprogMap);
   vignettes = vignContents.map(v=> mapVignette(v, vprogMap[v.id] || {id:null,interval:0,repetition:0,efactor:2.5,next_review:today}));
 
+  // ミッション設定
+  await loadMission();
+
+  // 学習記録(何日にどれだけ復習したか)
+  const { data: sdRows } = await sb.from('study_days').select('*').eq('user_id', currentUser.id);
+  studyDays = {};
+  (sdRows||[]).forEach(r=> studyDays[r.day] = r.reviews);
+
   fillChapterSelect(chapterSelect, subjectSelect.value);
   fillChapterSelect(doubtChapterSelect, doubtSubjectSelect.value);
   fillChapterSelect(vignChapterSelect, vignSubjectSelect.value);
-  renderList(); renderStats(); renderDoubtList(); renderVignetteList();
+  renderList(); renderStats(); renderDoubtList(); renderVignetteList(); renderBridge();
 }
 
 // ---------- subject/chapter selects ----------
@@ -604,6 +1061,8 @@ document.querySelectorAll('.tabs .tab').forEach(t=>{
     document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
     t.classList.add('active');
     document.getElementById('page-'+t.dataset.tab).classList.add('active');
+    document.body.classList.toggle('bridge-mode', t.dataset.tab==='bridge');
+    if(t.dataset.tab==='bridge'){ renderBridge(); }
     if(t.dataset.tab==='list'){ renderList(); renderStats(); renderDoubtList(); renderVignetteList(); }
     if(t.dataset.tab==='review'){ startReview(); }
   });
@@ -898,19 +1357,27 @@ function cardItemHtml(c){
     <div class="card-item">
       <div>
         ${c.principleType && c.principleType!=='none' ? '<span class="tag principle">原理</span>' : ''}
-        ${c.memorized ? '<span class="tag memorized">暗記</span>' : ''}
+        ${c.memorized ? '<span class="tag memorized">暗記もの</span>' : ''}
       </div>
       <div class="q">${escapeHtml(c.question)}</div>
       ${c.questionImagePath ? '<img class="thumb" id="qimg-'+c.id+'">' : ''}
       <div class="a" id="a-${c.id}">${escapeHtml(c.answer)}</div>
       <div class="btn-row">
         <button data-act="toggle" data-id="${c.id}">答え</button>
+        <button data-act="edit-qa" data-id="${c.id}">編集</button>
         <button data-act="principle" data-id="${c.id}">原理を見る</button>
         <button data-act="edit-principle" data-id="${c.id}">原理を追加</button>
         <button data-act="edit-img" data-id="${c.id}">写真を追加</button>
-        <button data-act="toggle-memorized" data-id="${c.id}">${c.memorized ? '暗記を外す' : '暗記にする'}</button>
+        <button data-act="toggle-memorized" data-id="${c.id}">${c.memorized ? '暗記ものを解除' : '暗記ものにする'}</button>
         <button data-act="move" data-id="${c.id}">移動</button>
         <button data-act="delete" data-id="${c.id}">削除</button>
+      </div>
+      <div class="principle-edit" id="qae-${c.id}">
+        <label>問題文</label>
+        <textarea id="qae-q-${c.id}" style="min-height:60px;">${escapeHtml(c.question)}</textarea>
+        <label>答え</label>
+        <textarea id="qae-a-${c.id}" style="min-height:60px;">${escapeHtml(c.answer)}</textarea>
+        <button class="primary small" data-act="save-qa" data-id="${c.id}">保存する</button>
       </div>
       <div class="principle-edit" id="mv-${c.id}">
         <label>移動先の科目</label>
@@ -1002,6 +1469,16 @@ function renderList(){
     const newSubj = document.getElementById('mv-subj-'+id).value;
     const newChap = document.getElementById('mv-chap-'+id).value;
     const { error } = await sb.from('cards').update({ subject:newSubj, chapter:newChap }).eq('id', id);
+    if(error){ alert('保存エラー: '+error.message); return; }
+    await loadAll();
+  }));
+  wrap.querySelectorAll('[data-act=edit-qa]').forEach(b=> b.addEventListener('click',()=> document.getElementById('qae-'+b.dataset.id).classList.toggle('show')));
+  wrap.querySelectorAll('[data-act=save-qa]').forEach(b=> b.addEventListener('click', async ()=>{
+    const id = b.dataset.id;
+    const q = document.getElementById('qae-q-'+id).value.trim();
+    const a = document.getElementById('qae-a-'+id).value.trim();
+    if(!q || !a){ alert('問題文と答えは必須です'); return; }
+    const { error } = await sb.from('cards').update({ question:q, answer:a }).eq('id', id);
     if(error){ alert('保存エラー: '+error.message); return; }
     await loadAll();
   }));
@@ -1146,6 +1623,321 @@ function renderVignetteList(){
   });
 }
 
+// ================= BRIDGE(艦橋) =================
+// 「あたらしい内科外科」10科目 + 整形 = 初期ミッションの既定
+const DEFAULT_MISSION_SUBJECTS = ['腎','内分泌','血液','免疫','感染症','呼吸器','循環器','消化器','肝胆膵','神経','整形'];
+let mission = null;
+let mfPicked = [];
+
+function defaultMission(){
+  return { title:'内科外科10科目 + 整形 完了', target_date:'2026-08-15', daily_goal:3, subjects:[...DEFAULT_MISSION_SUBJECTS] };
+}
+async function loadMission(){
+  const { data, error } = await sb.from('missions').select('*').eq('user_id', currentUser.id).maybeSingle();
+  mission = (!error && data) ? data : defaultMission();
+  if(!Array.isArray(mission.subjects) || mission.subjects.length===0) mission.subjects = [...DEFAULT_MISSION_SUBJECTS];
+}
+async function saveMission(m){
+  const { error } = await sb.from('missions').upsert(
+    { user_id: currentUser.id, title:m.title, target_date:m.target_date, daily_goal:m.daily_goal, subjects:m.subjects },
+    { onConflict:'user_id' }
+  );
+  if(error){ alert('ミッションの保存エラー: '+error.message); return false; }
+  mission = m;
+  return true;
+}
+function daysUntil(dstr){
+  const [y,m,d] = dstr.split('-').map(Number);
+  const target = new Date(y, m-1, d);
+  const now = new Date(); now.setHours(0,0,0,0);
+  return Math.round((target - now) / 86400000);
+}
+// 国試(次に来る2月8日)までの日数 — 参考表示
+function daysToKokushi(){
+  const now = new Date();
+  let y = now.getFullYear();
+  if(new Date(y,1,8) < now) y += 1;
+  return daysUntil(`${y}-02-08`);
+}
+
+// 定着 = SM-2の復習間隔が21日以上に伸びたカード(長期記憶に乗った証拠)
+// ※ memorized(暗記もの)は「丸暗記するしかないカード」という種別マークなので判定に使わない
+function isSolid(c){ return (c.interval||0) >= 21; }
+
+function chapterStats(subj, ch){
+  const list = cards.filter(c=> c.subject===subj && String(c.chapter)===String(ch));
+  const n = list.length;
+  const solid = list.filter(isSolid).length;
+  return { n, solid, ratio: n ? solid/n : 0 };
+}
+function subjectStats(subj){
+  const chs = Object.keys(MEDU4_STRUCTURE[subj] || {});
+  let total=0, solid=0, opened=0;
+  chs.forEach(ch=>{
+    const s = chapterStats(subj, ch);
+    total += s.n; solid += s.solid;
+    if(s.n > 0) opened++;
+  });
+  return {
+    chapters: chs.length, opened, total, solid,
+    coverage: chs.length ? opened/chs.length : 0,
+    mastery: total ? solid/total : 0
+  };
+}
+// ミッション範囲の進捗(chapterを「開拓した=カードが1枚以上ある」で数える)
+function missionStats(){
+  let total=0, opened=0;
+  (mission.subjects||[]).forEach(s=>{
+    const st = subjectStats(s);
+    total += st.chapters; opened += st.opened;
+  });
+  const remaining = Math.max(0, total - opened);
+  const days = Math.max(1, daysUntil(mission.target_date));  // 期限当日でも1日分は残す
+  const overdue = daysUntil(mission.target_date) < 0;
+  const required = remaining === 0 ? 0 : remaining / days;
+  return { total, opened, remaining, days, required, overdue };
+}
+// 今日はじめてカードが入ったchapterの数
+function newChaptersToday(){
+  const today = todayStr();
+  const first = {};
+  cards.forEach(c=>{
+    const k = c.subject+'||'+c.chapter;
+    if(!first[k] || c.createdAt < first[k]) first[k] = c.createdAt;
+  });
+  return Object.values(first).filter(d=> d === today).length;
+}
+// 次に開拓すべきchapter(ミッション対象の科目を優先)
+function nextUntouchedChapter(){
+  const order = [...(mission.subjects||[]), ...SUBJECTS.filter(s=> !(mission.subjects||[]).includes(s))];
+  for(const subj of order){
+    const chs = Object.keys(MEDU4_STRUCTURE[subj]||{}).sort((a,b)=>parseFloat(a)-parseFloat(b));
+    for(const ch of chs){
+      if(chapterStats(subj, ch).n === 0) return { subject:subj, chapter:ch };
+    }
+  }
+  return null;
+}
+function computeStreak(){
+  let streak = 0;
+  const d = new Date();
+  if(!(studyDays[todayStr()] > 0)) d.setDate(d.getDate()-1);
+  while(studyDays[dateStr(d)] > 0){ streak++; d.setDate(d.getDate()-1); }
+  return streak;
+}
+
+function renderBridge(){
+  if(!mission) return;
+  const today = todayStr();
+  const ms = missionStats();
+
+  // --- ミッション ---
+  document.getElementById('mTitle').textContent = mission.title || 'ミッション';
+  const dLeft = daysUntil(mission.target_date);
+  document.getElementById('clockNum').textContent = ms.remaining===0 ? '完了' : (dLeft < 0 ? '0' : String(dLeft));
+  document.getElementById('clockUnit').textContent = ms.remaining===0 ? 'Mission complete' : (dLeft<0 ? 'Overdue' : 'Days remaining');
+
+  // ホロディスプレイ: 進捗リング + 科目ごとの目盛り
+  const pct = ms.total ? ms.opened/ms.total : 0;
+  const CIRC = 2 * Math.PI * 83;
+  document.getElementById('holoArc').style.strokeDashoffset = CIRC * (1 - pct);
+  document.getElementById('holoPct').textContent = Math.round(pct*100) + '%';
+  document.getElementById('holoCap').textContent = `${ms.opened} / ${ms.total} ch`;
+  // 目盛り = ミッション対象の科目。開拓が完了した科目は明るく灯る
+  const tSubs = mission.subjects || [];
+  document.getElementById('holoTicks').innerHTML = tSubs.map((s,i)=>{
+    const st = subjectStats(s);
+    const done = st.chapters>0 && st.opened === st.chapters;
+    const ang = (i / Math.max(1,tSubs.length)) * 2*Math.PI - Math.PI/2;
+    const r1 = 64, r2 = 72;
+    const x1 = 100+Math.cos(ang)*r1, y1 = 100+Math.sin(ang)*r1;
+    const x2 = 100+Math.cos(ang)*r2, y2 = 100+Math.sin(ang)*r2;
+    return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"
+              stroke="${done ? '#4FAE85' : '#7fe3d4'}" stroke-opacity="${done ? 1 : 0.22}"><title>${escapeHtml(s)}</title></line>`;
+  }).join('');
+
+  document.getElementById('mLeft').innerHTML = `${ms.remaining}<small> ch</small>`;
+  const req = ms.required;
+  document.getElementById('mReq').innerHTML = `${req===0 ? '0' : req.toFixed(1)}<small> ch/日</small>`;
+  document.getElementById('mGoal').innerHTML = `${mission.daily_goal}<small> ch/日</small>`;
+  document.getElementById('mProgress').textContent = `国試まで ${daysToKokushi()}日`;
+
+  // 状態灯: 必要ペースが目標以内なら順調、超えたら注意、1.5倍超で警報
+  const paceRow = document.getElementById('paceRow');
+  const lamp = document.getElementById('mLamp');
+  paceRow.classList.remove('nominal','alert');
+  lamp.classList.remove('nominal','caution','alert');
+  let state, text;
+  if(ms.remaining===0){ state='nominal'; text='complete'; }
+  else if(ms.overdue){ state='alert'; text='overdue'; }
+  else if(req <= mission.daily_goal){ state='nominal'; text='on track'; }
+  else if(req <= mission.daily_goal*1.5){ state='caution'; text='behind'; }
+  else { state='alert'; text='critical'; }
+  lamp.classList.add(state); lamp.textContent = text;
+  if(state==='nominal') paceRow.classList.add('nominal');
+  if(state==='alert') paceRow.classList.add('alert');
+
+  // --- 本日の任務 ---
+  const due = cards.filter(c=>c.nextReview<=today).length + vignettes.filter(v=>v.nextReview<=today).length;
+  const doneToday = studyDays[today] || 0;
+  const dueEl = document.getElementById('orderDue');
+  document.getElementById('dueNum').innerHTML = due===0 ? 'CLEAR' : `${due}<small> 枚</small>`;
+  dueEl.classList.toggle('done', due===0);
+  const totalToday = due + doneToday;
+  document.getElementById('dueBar').style.width = (totalToday ? doneToday/totalToday*100 : 100) + '%';
+
+  const goal = mission.daily_goal || 3;
+  const nToday = newChaptersToday();
+  const newEl = document.getElementById('orderNew');
+  document.getElementById('newNum').innerHTML = `${nToday}<small> / ${goal}</small>`;
+  newEl.classList.toggle('done', nToday >= goal);
+  document.getElementById('newBar').style.width = Math.min(100, nToday/goal*100) + '%';
+
+  const rvBtn = document.getElementById('btnLaunchReview');
+  rvBtn.textContent = due===0 ? '本日の復習は完了' : `復習を開始 (${due})`;
+  rvBtn.disabled = due===0;
+
+  const next = nextUntouchedChapter();
+  const chBtn = document.getElementById('btnLaunchChapter');
+  if(next){
+    document.getElementById('nextChapName').textContent = `${next.subject} Ch.${next.chapter}`;
+    chBtn.disabled = false;
+    chBtn.dataset.subject = next.subject;
+    chBtn.dataset.chapter = next.chapter;
+  } else {
+    document.getElementById('nextChapName').textContent = '全chapter開拓済み';
+    chBtn.disabled = true;
+  }
+
+  // --- 航行記録 ---
+  document.getElementById('streakNum').innerHTML = `${computeStreak()}<small>日連続</small>`;
+  document.getElementById('totalNum').textContent = cards.length + vignettes.length;
+  const strip = document.getElementById('strip14');
+  let sHtml = '';
+  for(let i=13; i>=0; i--){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const k = dateStr(d);
+    const on = (studyDays[k]||0) > 0;
+    sHtml += `<i class="${on?'on':''}${i===0?' today':''}" title="${k}: ${studyDays[k]||0}枚"></i>`;
+  }
+  strip.innerHTML = sHtml;
+
+  // --- SYSTEMS(24科目) ---
+  const inMission = new Set(mission.subjects||[]);
+  const grid = document.getElementById('sysGrid');
+  grid.innerHTML = SUBJECTS.map((s,i)=>{
+    const st = subjectStats(s);
+    const lit = st.opened > 0;
+    const full = st.chapters>0 && st.opened === st.chapters;
+    return `<div class="cell ${lit?'lit':''} ${full?'full':''} ${inMission.has(s)?'tgt':''} ${selectedSystem===s?'sel':''}"
+              data-sys="${escapeHtml(s)}" style="animation-delay:${i*18}ms"
+              title="${escapeHtml(s)} / 開拓 ${st.opened}/${st.chapters} ch / 定着 ${st.solid}/${st.total}枚">
+        <div class="nm">${escapeHtml(s)}</div>
+        <div class="ch">${st.opened}/${st.chapters}</div>
+        <div class="lamp"><i style="width:${Math.round(st.mastery*100)}%"></i></div>
+      </div>`;
+  }).join('');
+  grid.querySelectorAll('.cell').forEach(el=>{
+    el.addEventListener('click',()=>{
+      selectedSystem = (selectedSystem === el.dataset.sys) ? null : el.dataset.sys;
+      renderBridge();
+    });
+  });
+
+  // --- chapter内訳 ---
+  const chapsEl = document.getElementById('sysChaps');
+  if(!selectedSystem){ chapsEl.classList.remove('show'); chapsEl.innerHTML=''; }
+  else{
+    const chs = Object.keys(MEDU4_STRUCTURE[selectedSystem]||{}).sort((a,b)=>parseFloat(a)-parseFloat(b));
+    chapsEl.innerHTML = chs.map(ch=>{
+      const s = chapterStats(selectedSystem, ch);
+      const cls = s.n===0 ? '' : (s.ratio >= 0.6 ? 'solid' : 'part');
+      const title = getChapterTitle(selectedSystem, ch);
+      return `<div class="chap ${cls}" data-subj="${escapeHtml(selectedSystem)}" data-ch="${escapeHtml(ch)}">
+          <span class="dot"></span>
+          <span class="t">Ch.${escapeHtml(ch)}${title? ' '+escapeHtml(title):''}</span>
+          <span class="n">${s.n===0 ? '未開拓' : s.solid+'/'+s.n}</span>
+        </div>`;
+    }).join('');
+    chapsEl.classList.add('show');
+    chapsEl.querySelectorAll('.chap').forEach(el=>{
+      el.addEventListener('click',()=> jumpToInput(el.dataset.subj, el.dataset.ch));
+    });
+  }
+}
+
+// ---- ミッション設定モーダル ----
+function openMissionModal(){
+  document.getElementById('mfTitle').value = mission.title || '';
+  document.getElementById('mfDate').value = mission.target_date || '';
+  document.getElementById('mfGoal').value = mission.daily_goal || 3;
+  mfPicked = [...(mission.subjects||[])];
+  const wrap = document.getElementById('mfSubjects');
+  wrap.innerHTML = SUBJECTS.map(s=>
+    `<span class="${mfPicked.includes(s)?'on':''}" data-s="${escapeHtml(s)}">${escapeHtml(s)}</span>`
+  ).join('');
+  wrap.querySelectorAll('span').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const s = el.dataset.s;
+      if(mfPicked.includes(s)) mfPicked = mfPicked.filter(x=>x!==s);
+      else mfPicked.push(s);
+      el.classList.toggle('on');
+    });
+  });
+  document.getElementById('missionModal').classList.add('show');
+}
+document.getElementById('btnEditMission').addEventListener('click', openMissionModal);
+document.getElementById('mfClose').addEventListener('click', ()=> document.getElementById('missionModal').classList.remove('show'));
+document.getElementById('mfSave').addEventListener('click', async ()=>{
+  const title = document.getElementById('mfTitle').value.trim() || 'ミッション';
+  const target_date = document.getElementById('mfDate').value;
+  const daily_goal = parseInt(document.getElementById('mfGoal').value) || 3;
+  if(!target_date){ alert('期限を入力してください'); return; }
+  if(mfPicked.length===0){ alert('対象の科目を1つ以上選んでください'); return; }
+  const ok = await saveMission({ title, target_date, daily_goal, subjects:[...mfPicked] });
+  if(!ok) return;
+  document.getElementById('missionModal').classList.remove('show');
+  renderBridge();
+});
+
+// 入力タブへ移動して、指定の科目/chapterを選んだ状態にする
+function jumpToInput(subject, chapter){
+  document.body.classList.remove('bridge-mode');
+  document.querySelectorAll('.tabs .tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelector('.tab[data-tab=input]').classList.add('active');
+  document.getElementById('page-input').classList.add('active');
+  document.querySelectorAll('[data-cat]').forEach(x=>x.classList.remove('active'));
+  document.querySelector('[data-cat=normal]').classList.add('active');
+  document.getElementById('cat-normal').style.display='block';
+  document.getElementById('cat-doubt').style.display='none';
+  document.getElementById('cat-vignette').style.display='none';
+  subjectSelect.value = subject;
+  fillChapterSelect(chapterSelect, subject);
+  chapterSelect.value = chapter;
+  chapterTitleInput.value = getChapterTitle(subject, chapter);
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+document.getElementById('btnLaunchReview').addEventListener('click', ()=>{
+  document.querySelector('.tab[data-tab=review]').click();
+});
+document.getElementById('btnLaunchChapter').addEventListener('click', (e)=>{
+  const b = e.currentTarget;
+  if(b.dataset.subject) jumpToInput(b.dataset.subject, b.dataset.chapter);
+});
+
+// 復習を1枚採点するたびに、その日の枚数を記録する
+async function bumpStudyDay(){
+  const today = todayStr();
+  studyDays[today] = (studyDays[today] || 0) + 1;
+  await sb.from('study_days').upsert(
+    { user_id: currentUser.id, day: today, reviews: studyDays[today] },
+    { onConflict: 'user_id,day' }
+  );
+}
+// ================= /BRIDGE =================
+
 // ---------- review (SM-2, normal cards + vignettes) ----------
 function startReview(){
   const today = todayStr();
@@ -1174,7 +1966,7 @@ async function renderReview(){
     cardEl.innerHTML = `
       <div style="text-align:center;margin-bottom:6px;">
         ${c.principleType && c.principleType!=='none' ? '<span class="tag principle">原理</span>' : ''}
-        ${c.memorized ? '<span class="tag memorized">暗記</span>' : ''}
+        ${c.memorized ? '<span class="tag memorized">暗記もの</span>' : ''}
         <span style="font-size:11px;color:var(--text-soft);">${c.subject} ${chapterLabel(c.subject,c.chapter)}</span>
       </div>
       <div class="review-q">${escapeHtml(c.question)}</div>
@@ -1239,9 +2031,11 @@ async function gradeItem(item, quality){
   d.efactor = d.efactor + (0.1 - (5-quality)*(0.08+(5-quality)*0.02));
   if(d.efactor<1.3) d.efactor=1.3;
   const next = new Date(); next.setDate(next.getDate()+d.interval);
-  d.nextReview = next.toISOString().slice(0,10);
+  d.nextReview = dateStr(next);
   const table = item.kind==='normal' ? 'card_progress' : 'vignette_progress';
   await sb.from(table).update({ interval:d.interval, repetition:d.repetition, efactor:d.efactor, next_review:d.nextReview }).eq('id', d.progressId);
+  await bumpStudyDay();
+  renderBridge();
 }
 </script>
 </body>
