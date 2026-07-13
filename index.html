@@ -177,11 +177,19 @@
   /* コンソール(窓の下) */
   #page-bridge .console{padding:16px;}
   /* 中央ホロディスプレイ */
-  #page-bridge .holo{position:relative;width:158px;margin:2px auto 2px;}
+  #page-bridge .holo{position:relative;width:168px;margin:0 auto;}
   #page-bridge .holo svg{display:block;width:100%;height:auto;}
+  #page-bridge .holo #holoBody,
+  #page-bridge .holo #holoTicks,
+  #page-bridge .holo #holoArc{animation:holoFlicker 5.5s ease-in-out infinite;}
+  @keyframes holoFlicker{
+    0%,100%{opacity:1;} 46%{opacity:1;} 48%{opacity:.72;} 50%{opacity:.95;}
+    52%{opacity:.8;} 54%{opacity:1;}
+  }
   #page-bridge .holo .core{
-    position:absolute;inset:0;display:flex;flex-direction:column;
+    position:absolute;left:0;right:0;top:0;bottom:8%;display:flex;flex-direction:column;
     align-items:center;justify-content:center;pointer-events:none;
+    animation:holoFlicker 5.5s ease-in-out infinite;
   }
   #page-bridge .holo .pct{
     font-family:var(--mono);font-size:26px;font-weight:700;color:var(--readout);
@@ -303,6 +311,17 @@
 
   @keyframes boot{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
   #page-bridge .cell{animation:boot .28s ease backwards;}
+  /* 起動シーケンス: パネルが順に点灯 */
+  #page-bridge.booting .panel{animation:panelUp .5s ease backwards;}
+  #page-bridge.booting .panel:nth-child(1){animation-delay:0s;}
+  #page-bridge.booting .panel:nth-child(2){animation-delay:.18s;}
+  #page-bridge.booting .panel:nth-child(3){animation-delay:.32s;}
+  #page-bridge.booting .panel:nth-child(4){animation-delay:.46s;}
+  @keyframes panelUp{
+    0%{opacity:0;transform:translateY(10px);}
+    60%{opacity:1;}
+    100%{opacity:1;transform:none;}
+  }
 
   /* ---- chapter内訳 ---- */
   #page-bridge .chaps{margin-top:12px;border-top:1px solid var(--etch);padding-top:12px;display:none;}
@@ -332,10 +351,18 @@
   body.bridge-mode .logo{box-shadow:0 4px 14px rgba(0,0,0,0.5);}
   body{transition:background .35s ease;}
 
+  /* ---- 起動シーケンス ---- */
+  #page-bridge.booting .panel{opacity:0;transform:translateY(8px);}
+  #page-bridge .panel{transition:opacity .4s ease,transform .4s ease;}
+  #page-bridge.boot-1 .panel:nth-of-type(1){opacity:1;transform:none;}
+  #page-bridge.boot-2 .panel:nth-of-type(-n+2){opacity:1;transform:none;}
+  #page-bridge.boot-3 .panel{opacity:1;transform:none;}
+
   @media (prefers-reduced-motion:reduce){
     #page-bridge .cell{animation:none;}
     #page-bridge .order .bar>i{transition:none;}
     body{transition:none;}
+    #page-bridge.booting .panel{opacity:1;transform:none;}
   }
   /* =================== /BRIDGE =================== */
 
@@ -382,7 +409,7 @@
   <div class="panel clock">
 
     <div class="canopy">
-      <svg viewBox="0 0 360 184" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <svg viewBox="0 0 360 196" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <defs>
           <radialGradient id="gx" cx="50%" cy="50%">
             <stop offset="0%" stop-color="#fff5e0" stop-opacity=".95"/>
@@ -391,97 +418,137 @@
             <stop offset="100%" stop-color="#0a1220" stop-opacity="0"/>
           </radialGradient>
           <radialGradient id="pl" cx="34%" cy="28%">
-            <stop offset="0%" stop-color="#a8cfe4"/>
+            <stop offset="0%" stop-color="#b6dcef"/>
             <stop offset="30%" stop-color="#5b89a8"/>
             <stop offset="68%" stop-color="#274257"/>
             <stop offset="100%" stop-color="#0b141d"/>
           </radialGradient>
           <radialGradient id="neb" cx="50%" cy="60%">
-            <stop offset="0%" stop-color="#2c4d78" stop-opacity=".45"/>
+            <stop offset="0%" stop-color="#2c4d78" stop-opacity=".5"/>
             <stop offset="100%" stop-color="#0a1220" stop-opacity="0"/>
           </radialGradient>
           <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#7fe3d4" stop-opacity=".10"/>
-            <stop offset="45%" stop-color="#7fe3d4" stop-opacity="0"/>
+            <stop offset="0%" stop-color="#7fe3d4" stop-opacity=".12"/>
+            <stop offset="40%" stop-color="#7fe3d4" stop-opacity="0"/>
           </linearGradient>
           <linearGradient id="strut" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#243c50"/>
+            <stop offset="0%" stop-color="#28455c"/>
+            <stop offset="55%" stop-color="#152738"/>
             <stop offset="100%" stop-color="#0a121a"/>
           </linearGradient>
-          <clipPath id="cL"><path d="M6,74 L102,52 L102,156 L6,174 Z"/></clipPath>
-          <clipPath id="cC"><path d="M116,50 L132,40 L228,40 L244,50 L244,154 L228,164 L132,164 L116,154 Z"/></clipPath>
-          <clipPath id="cR"><path d="M258,52 L354,74 L354,174 L258,156 Z"/></clipPath>
+          <linearGradient id="bevelL" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#4a7691"/>
+            <stop offset="100%" stop-color="#16283a"/>
+          </linearGradient>
+          <clipPath id="cL"><path d="M6,86 L102,62 L102,168 L6,188 Z"/></clipPath>
+          <clipPath id="cC"><path d="M116,58 L134,46 L226,46 L244,58 L244,164 L226,176 L134,176 L116,164 Z"/></clipPath>
+          <clipPath id="cR"><path d="M258,62 L354,86 L354,188 L258,168 Z"/></clipPath>
         </defs>
 
-        <rect x="0" y="0" width="360" height="184" fill="url(#strut)"/>
+        <rect x="0" y="0" width="360" height="196" fill="url(#strut)"/>
 
-        <!-- 上部の計器帯 -->
+        <!-- 天井の計器帯 -->
         <g>
-          <rect x="10" y="9" width="28" height="8" rx="2" fill="#7fe3d4" opacity=".5"/>
-          <rect x="42" y="9" width="13" height="8" rx="2" fill="#7fe3d4" opacity=".22"/>
-          <rect x="59" y="9" width="20" height="8" rx="2" fill="#7fe3d4" opacity=".35"/>
-          <rect x="83" y="9" width="10" height="8" rx="2" fill="#7fe3d4" opacity=".15"/>
-          <rect x="267" y="9" width="10" height="8" rx="2" fill="#7fe3d4" opacity=".15"/>
-          <rect x="281" y="9" width="20" height="8" rx="2" fill="#7fe3d4" opacity=".35"/>
-          <rect x="305" y="9" width="13" height="8" rx="2" fill="#7fe3d4" opacity=".22"/>
-          <rect x="322" y="9" width="28" height="8" rx="2" fill="#7fe3d4" opacity=".5"/>
-          <rect x="8" y="24" width="344" height="1" fill="#7fe3d4" opacity=".12"/>
+          <rect x="8" y="8" width="344" height="18" rx="3" fill="#0c1826" stroke="#2b4burgo" stroke-width="0"/>
+          <rect x="8" y="8" width="344" height="18" rx="3" fill="#0c1826" stroke="#2b4a63" stroke-width=".8"/>
+          <rect x="14" y="12" width="26" height="9" rx="2" fill="#7fe3d4" opacity=".5">
+            <animate attributeName="opacity" values=".5;.2;.5" dur="3.2s" repeatCount="indefinite"/>
+          </rect>
+          <rect x="44" y="12" width="12" height="9" rx="2" fill="#7fe3d4" opacity=".2"/>
+          <rect x="60" y="12" width="18" height="9" rx="2" fill="#e8a33d" opacity=".45">
+            <animate attributeName="opacity" values=".45;.15;.45" dur="2.1s" repeatCount="indefinite"/>
+          </rect>
+          <rect x="82" y="12" width="9" height="9" rx="2" fill="#7fe3d4" opacity=".14"/>
+          <rect x="269" y="12" width="9" height="9" rx="2" fill="#7fe3d4" opacity=".14"/>
+          <rect x="282" y="12" width="18" height="9" rx="2" fill="#7fe3d4" opacity=".35"/>
+          <rect x="304" y="12" width="12" height="9" rx="2" fill="#7fe3d4" opacity=".2">
+            <animate attributeName="opacity" values=".2;.55;.2" dur="4.4s" repeatCount="indefinite"/>
+          </rect>
+          <rect x="320" y="12" width="26" height="9" rx="2" fill="#7fe3d4" opacity=".5"/>
         </g>
 
-        <!-- 左窓: 銀河 -->
+        <!-- ===== 窓の外(流れる星 = 航行中) ===== -->
         <g clip-path="url(#cL)">
-          <rect x="0" y="40" width="120" height="144" fill="#050a12"/>
-          <ellipse cx="52" cy="104" rx="46" ry="30" fill="url(#gx)" transform="rotate(-18 52 104)"/>
+          <rect x="0" y="46" width="120" height="150" fill="#050a12"/>
+          <ellipse cx="52" cy="120" rx="46" ry="30" fill="url(#gx)" transform="rotate(-18 52 120)"/>
           <g fill="#fff">
-            <circle cx="18" cy="82" r="1.1"/><circle cx="34" cy="142" r=".8"/><circle cx="78" cy="68" r="1"/>
-            <circle cx="92" cy="128" r="1.2"/><circle cx="24" cy="118" r=".7"/><circle cx="66" cy="152" r=".9"/>
-            <circle cx="96" cy="92" r=".7"/><circle cx="12" cy="156" r=".8"/>
+            <g>
+              <circle cx="18" cy="96" r="1.1"/><circle cx="34" cy="156" r=".8"/><circle cx="78" cy="82" r="1"/>
+              <circle cx="92" cy="142" r="1.2"/><circle cx="24" cy="132" r=".7"/><circle cx="66" cy="166" r=".9"/>
+              <circle cx="96" cy="106" r=".7"/><circle cx="12" cy="170" r=".8"/>
+              <animateTransform attributeName="transform" type="translate" values="0 0;-14 3" dur="26s" repeatCount="indefinite"/>
+            </g>
           </g>
         </g>
 
-        <!-- 中央窓: 深宇宙 -->
         <g clip-path="url(#cC)">
-          <rect x="110" y="36" width="140" height="132" fill="#050a12"/>
-          <ellipse cx="180" cy="116" rx="70" ry="50" fill="url(#neb)"/>
+          <rect x="110" y="42" width="140" height="140" fill="#050a12"/>
+          <ellipse cx="180" cy="128" rx="70" ry="50" fill="url(#neb)"/>
           <g fill="#fff">
-            <circle cx="132" cy="62" r="1"/><circle cx="152" cy="88" r=".8"/><circle cx="171" cy="54" r="1.3"/>
-            <circle cx="196" cy="76" r=".9"/><circle cx="220" cy="60" r="1.1"/><circle cx="236" cy="98" r=".8"/>
-            <circle cx="126" cy="112" r=".9"/><circle cx="146" cy="144" r="1.2"/><circle cx="168" cy="128" r=".7"/>
-            <circle cx="190" cy="152" r="1"/><circle cx="214" cy="134" r=".9"/><circle cx="234" cy="150" r=".8"/>
-            <circle cx="204" cy="110" r=".7"/><circle cx="160" cy="104" r=".6"/><circle cx="228" cy="120" r=".6"/>
+            <g>
+              <circle cx="132" cy="74" r="1"/><circle cx="152" cy="100" r=".8"/><circle cx="171" cy="66" r="1.3"/>
+              <circle cx="196" cy="88" r=".9"/><circle cx="220" cy="72" r="1.1"/><circle cx="236" cy="110" r=".8"/>
+              <circle cx="126" cy="124" r=".9"/><circle cx="146" cy="156" r="1.2"/><circle cx="168" cy="140" r=".7"/>
+              <circle cx="190" cy="164" r="1"/><circle cx="214" cy="146" r=".9"/><circle cx="234" cy="162" r=".8"/>
+              <circle cx="204" cy="122" r=".7"/><circle cx="160" cy="116" r=".6"/><circle cx="228" cy="132" r=".6"/>
+              <animateTransform attributeName="transform" type="translate" values="0 0;-18 4" dur="30s" repeatCount="indefinite"/>
+            </g>
           </g>
-          <circle cx="171" cy="54" r="3.2" fill="#fff" opacity=".2"/>
+          <circle cx="171" cy="66" r="3.2" fill="#fff" opacity=".2"/>
+          <!-- 走査線 -->
+          <rect x="110" y="42" width="140" height="1.5" fill="#7fe3d4" opacity=".12">
+            <animate attributeName="y" values="46;172;46" dur="7s" repeatCount="indefinite"/>
+          </rect>
         </g>
 
-        <!-- 右窓: 惑星 -->
         <g clip-path="url(#cR)">
-          <rect x="240" y="40" width="120" height="144" fill="#050a12"/>
-          <circle cx="336" cy="104" r="54" fill="url(#pl)"/>
-          <ellipse cx="336" cy="104" rx="70" ry="11" fill="none" stroke="#a8cfe4" stroke-width="1" opacity=".5" transform="rotate(-14 336 104)"/>
-          <circle cx="292" cy="150" r="9" fill="#3b5a70"/>
+          <rect x="240" y="46" width="120" height="150" fill="#050a12"/>
+          <circle cx="336" cy="118" r="54" fill="url(#pl)"/>
+          <ellipse cx="336" cy="118" rx="70" ry="11" fill="none" stroke="#a8cfe4" stroke-width="1" opacity=".5" transform="rotate(-14 336 118)"/>
+          <circle cx="292" cy="164" r="9" fill="#3b5a70"/>
           <g fill="#fff">
-            <circle cx="268" cy="74" r="1"/><circle cx="284" cy="120" r=".8"/><circle cx="270" cy="162" r="1.1"/>
-            <circle cx="296" cy="60" r=".7"/><circle cx="264" cy="112" r=".9"/>
+            <g>
+              <circle cx="268" cy="88" r="1"/><circle cx="284" cy="134" r=".8"/><circle cx="270" cy="176" r="1.1"/>
+              <circle cx="296" cy="74" r=".7"/><circle cx="264" cy="126" r=".9"/>
+              <animateTransform attributeName="transform" type="translate" values="0 0;-11 2" dur="24s" repeatCount="indefinite"/>
+            </g>
           </g>
         </g>
 
-        <!-- ガラスの反射 -->
+        <!-- ガラス反射 -->
         <g>
-          <path d="M6,74 L102,52 L102,156 L6,174 Z" fill="url(#glass)"/>
-          <path d="M116,50 L132,40 L228,40 L244,50 L244,154 L228,164 L132,164 L116,154 Z" fill="url(#glass)"/>
-          <path d="M258,52 L354,74 L354,174 L258,156 Z" fill="url(#glass)"/>
+          <path d="M6,86 L102,62 L102,168 L6,188 Z" fill="url(#glass)"/>
+          <path d="M116,58 L134,46 L226,46 L244,58 L244,164 L226,176 L134,176 L116,164 Z" fill="url(#glass)"/>
+          <path d="M258,62 L354,86 L354,188 L258,168 Z" fill="url(#glass)"/>
+          <path d="M120,60 L150,49 L142,52 L118,64 Z" fill="#dff7f1" opacity=".08"/>
         </g>
 
-        <!-- 窓枠のベゼル -->
-        <g fill="none" stroke="#3d6580" stroke-width="1.3">
-          <path d="M6,74 L102,52 L102,156 L6,174 Z"/>
-          <path d="M116,50 L132,40 L228,40 L244,50 L244,154 L228,164 L132,164 L116,154 Z"/>
-          <path d="M258,52 L354,74 L354,174 L258,156 Z"/>
+        <!-- 窓枠: 二重ベゼル+ボルト -->
+        <g fill="none" stroke="#0a141d" stroke-width="4" stroke-linejoin="round">
+          <path d="M6,86 L102,62 L102,168 L6,188 Z"/>
+          <path d="M116,58 L134,46 L226,46 L244,58 L244,164 L226,176 L134,176 L116,164 Z"/>
+          <path d="M258,62 L354,86 L354,188 L258,168 Z"/>
         </g>
-        <g fill="none" stroke="#7fe3d4" stroke-width=".8" opacity=".3">
-          <path d="M132,40 L228,40"/>
-          <path d="M102,52 L102,156"/>
-          <path d="M258,52 L258,156"/>
+        <g fill="none" stroke="#436e8a" stroke-width="1.4" stroke-linejoin="round">
+          <path d="M6,86 L102,62 L102,168 L6,188 Z"/>
+          <path d="M116,58 L134,46 L226,46 L244,58 L244,164 L226,176 L134,176 L116,164 Z"/>
+          <path d="M258,62 L354,86 L354,188 L258,168 Z"/>
+        </g>
+        <!-- 支柱のボルト -->
+        <g fill="#5e8aa5">
+          <circle cx="109" cy="70" r="1.6"/><circle cx="109" cy="112" r="1.6"/><circle cx="109" cy="156" r="1.6"/>
+          <circle cx="251" cy="70" r="1.6"/><circle cx="251" cy="112" r="1.6"/><circle cx="251" cy="156" r="1.6"/>
+        </g>
+        <!-- 支柱のハイライト -->
+        <rect x="104" y="60" width="2.5" height="112" fill="url(#bevelL)" opacity=".6"/>
+        <rect x="253" y="60" width="2.5" height="112" fill="url(#bevelL)" opacity=".6"/>
+
+        <!-- 機体下部: 通気スリット -->
+        <g fill="#0c1826" stroke="#2b4a63" stroke-width=".6">
+          <rect x="18" y="190" width="30" height="3" rx="1.5"/>
+          <rect x="54" y="190" width="30" height="3" rx="1.5"/>
+          <rect x="276" y="190" width="30" height="3" rx="1.5"/>
+          <rect x="312" y="190" width="30" height="3" rx="1.5"/>
         </g>
       </svg>
 
@@ -496,8 +563,25 @@
     <div class="console">
       <!-- 中央ホロディスプレイ: ミッション進捗 -->
       <div class="holo">
-        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <g fill="none" stroke="#7fe3d4">
+        <svg viewBox="0 0 200 216" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <linearGradient id="beam" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="0%" stop-color="#7fe3d4" stop-opacity=".22"/>
+              <stop offset="100%" stop-color="#7fe3d4" stop-opacity="0"/>
+            </linearGradient>
+            <linearGradient id="pedestal" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#2b4a63"/>
+              <stop offset="100%" stop-color="#0c1826"/>
+            </linearGradient>
+          </defs>
+          <!-- 投影ビーム -->
+          <path d="M74,206 L40,60 L160,60 L126,206 Z" fill="url(#beam)"/>
+          <!-- 台座 -->
+          <ellipse cx="100" cy="207" rx="42" ry="6" fill="url(#pedestal)" stroke="#3d6580" stroke-width=".8"/>
+          <ellipse cx="100" cy="205" rx="30" ry="3.5" fill="#7fe3d4" opacity=".5">
+            <animate attributeName="opacity" values=".5;.25;.5" dur="2.6s" repeatCount="indefinite"/>
+          </ellipse>
+          <g fill="none" stroke="#7fe3d4" id="holoBody">
             <circle cx="100" cy="100" r="92" stroke-opacity=".10"/>
             <circle cx="100" cy="100" r="74" stroke-opacity=".14"/>
             <circle cx="100" cy="100" r="52" stroke-opacity=".10"/>
@@ -879,6 +963,7 @@ async function onLoggedIn(user){
   document.getElementById('appRoot').style.display='block';
   document.body.classList.add('bridge-mode');  // 起動時は艦橋
   await loadAll();
+  bootBridge();
 }
 document.getElementById('loginBtn').addEventListener('click', async ()=>{
   const email = document.getElementById('authEmail').value.trim();
@@ -996,6 +1081,7 @@ async function loadAll(){
   fillChapterSelect(doubtChapterSelect, doubtSubjectSelect.value);
   fillChapterSelect(vignChapterSelect, vignSubjectSelect.value);
   renderList(); renderStats(); renderDoubtList(); renderVignetteList(); renderBridge();
+  if(!bootPlayed) playBootSequence();
 }
 
 // ---------- subject/chapter selects ----------
@@ -1062,7 +1148,7 @@ document.querySelectorAll('.tabs .tab').forEach(t=>{
     t.classList.add('active');
     document.getElementById('page-'+t.dataset.tab).classList.add('active');
     document.body.classList.toggle('bridge-mode', t.dataset.tab==='bridge');
-    if(t.dataset.tab==='bridge'){ renderBridge(); }
+    if(t.dataset.tab==='bridge'){ renderBridge(); bootBridge(); }
     if(t.dataset.tab==='list'){ renderList(); renderStats(); renderDoubtList(); renderVignetteList(); }
     if(t.dataset.tab==='review'){ startReview(); }
   });
@@ -1630,7 +1716,7 @@ let mission = null;
 let mfPicked = [];
 
 function defaultMission(){
-  return { title:'内科外科10科目 + 整形 完了', target_date:'2026-08-15', daily_goal:3, subjects:[...DEFAULT_MISSION_SUBJECTS] };
+  return { title:'内科外科10科目 + 整形 完了', target_date:'2026-08-07', daily_goal:3, subjects:[...DEFAULT_MISSION_SUBJECTS] };
 }
 async function loadMission(){
   const { data, error } = await sb.from('missions').select('*').eq('user_id', currentUser.id).maybeSingle();
@@ -1724,6 +1810,32 @@ function computeStreak(){
   if(!(studyDays[todayStr()] > 0)) d.setDate(d.getDate()-1);
   while(studyDays[dateStr(d)] > 0){ streak++; d.setDate(d.getDate()-1); }
   return streak;
+}
+
+let bootPlayed = false;
+function playBootSequence(){
+  const pg = document.getElementById('page-bridge');
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduced){ bootPlayed = true; return; }
+  pg.classList.add('booting');
+  setTimeout(()=> pg.classList.add('boot-1'), 60);
+  setTimeout(()=> pg.classList.add('boot-2'), 340);
+  setTimeout(()=> pg.classList.add('boot-3'), 620);
+  setTimeout(()=> pg.classList.remove('booting','boot-1','boot-2','boot-3'), 1400);
+
+  // 残日数カウントアップ
+  const el = document.getElementById('clockNum');
+  const target = parseInt(el.textContent);
+  if(!isNaN(target) && target > 0){
+    const t0 = performance.now(), dur = 900;
+    const tick = (t)=>{
+      const p = Math.min(1, (t-t0)/dur);
+      el.textContent = String(Math.round(target * (1 - Math.pow(1-p, 3))));
+      if(p < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+  bootPlayed = true;
 }
 
 function renderBridge(){
@@ -1926,6 +2038,38 @@ document.getElementById('btnLaunchChapter').addEventListener('click', (e)=>{
   const b = e.currentTarget;
   if(b.dataset.subject) jumpToInput(b.dataset.subject, b.dataset.chapter);
 });
+
+// 数字のカウントアップ演出(起動シーケンス用)
+function countUp(el, target, ms){
+  if(!Number.isFinite(target)){ return; }
+  const start = performance.now();
+  function tick(now){
+    const t = Math.min(1, (now-start)/ms);
+    const eased = 1 - Math.pow(1-t, 3);
+    el.textContent = String(Math.round(target * eased));
+    if(t < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+let bootedOnce = false;
+function bootBridge(){
+  const page = document.getElementById('page-bridge');
+  page.classList.add('booting');
+  setTimeout(()=> page.classList.remove('booting'), 1200);
+  // 残日数をカウントアップ
+  const el = document.getElementById('clockNum');
+  const target = parseInt(el.textContent);
+  if(Number.isFinite(target) && target > 0) countUp(el, target, 900);
+  // ホロのリングを0から伸ばす
+  const arc = document.getElementById('holoArc');
+  const finalOffset = arc.style.strokeDashoffset;
+  arc.style.transition = 'none';
+  arc.style.strokeDashoffset = '521.5';
+  requestAnimationFrame(()=>{ requestAnimationFrame(()=>{
+    arc.style.transition = 'stroke-dashoffset 1.1s ease .25s';
+    arc.style.strokeDashoffset = finalOffset;
+  });});
+}
 
 // 復習を1枚採点するたびに、その日の枚数を記録する
 async function bumpStudyDay(){
