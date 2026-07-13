@@ -636,16 +636,17 @@ document.querySelectorAll('.copybtn').forEach(btn=>{
 });
 
 // ---------- parsing ----------
+// 「---」で区切られていなくても、Q: .../A: ... の並びだけで自動的に1件ずつに分割する
 function parsePastedText(text){
-  const blocks = text.split(/\n-{3,}\n|\r\n-{3,}\r\n/).map(b=>b.trim()).filter(Boolean);
+  const norm = text.replace(/\r\n/g, '\n');
+  const re = /Q[:：]\s*([\s\S]*?)\n?\s*A[:：]\s*([\s\S]*?)(?=\n\s*(?:-{3,}\s*\n\s*)?Q[:：]|$)/gi;
   const results = [];
-  blocks.forEach(b=>{
-    const qm = b.match(/Q[:：]\s*([\s\S]*?)(?=\n\s*A[:：]|$)/i);
-    const am = b.match(/A[:：]\s*([\s\S]*)/i);
-    const q = qm ? qm[1].trim() : '';
-    const a = am ? am[1].trim() : '';
+  let m;
+  while((m = re.exec(norm)) !== null){
+    const q = m[1].trim();
+    const a = m[2].trim();
     if(q) results.push({question:q, answer:a});
-  });
+  }
   return results;
 }
 
