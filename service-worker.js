@@ -1,4 +1,4 @@
-const CACHE = 'kokushi-card-v2';
+const CACHE = 'kokushi-card-v3';
 const ASSETS = [
   './',
   './index.html',

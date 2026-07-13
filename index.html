@@ -192,6 +192,17 @@ A: 簡潔な答え
     </div>
 
     <div class="card">
+      <h3>①' 教科書・問題集の写真から作る(無料)</h3>
+      <p class="hint">口頭試問のページなどの写真を、いつも使っているAIチャット(Claudeなど)の会話に画像として貼り付けて、このプロンプトを一緒に送る。返ってきたテキストをコピーして、下の②の欄に貼れば読み込める。このアプリに直接画像をアップロードして自動生成する機能ではないので、追加の料金はかからない。</p>
+      <div class="copybox" id="promptBoxImg"><button class="copybtn" data-target="promptBoxImg">コピー</button>添付した写真の内容を読み取り、以下のフォーマットで一問一答形式に変換して。表になっている場合は「問題」列をQ、「解答」列をAにすること。原理・解説は書かないこと。余計な説明や前置きは不要。
+
+Q: 質問
+A: 簡潔な答え
+---
+(複数ある場合はこのブロックを---で区切って繰り返す)</div>
+    </div>
+
+    <div class="card">
       <h3>② テキストを貼り付け / 手動追加</h3>
       <textarea id="pasteInputN" placeholder="Q:/A:形式のテキストを貼る(---で区切れば何個でもまとめて読み込める)"></textarea>
       <button class="primary" id="parseBtnN">テキストを読み込む</button>
@@ -392,7 +403,7 @@ async function saveChapterTitleIfNeeded(subject, chapter, title){
   if(getChapterTitle(subject, chapter) === title) return;
   const { error } = await sb.from('chapter_titles').upsert(
     { user_id: currentUser.id, subject, chapter, title },
-    { onConflict: 'user_id,subject,chapter' }
+    { onConflict: 'subject,chapter' }
   );
   if(!error){
     chapterTitles[ctKey(subject, chapter)] = title;
@@ -473,22 +484,57 @@ async function getSignedUrl(path){
 }
 
 // ---------- mapping ----------
-function mapCard(r){ return {id:r.id, subject:r.subject, chapter:r.chapter, question:r.question, answer:r.answer,
+// カードの「内容」(cards/vignettes)と「自分の復習進捗」(card_progress/vignette_progress)を合体させる
+function mapCard(r, p){ return {id:r.id, subject:r.subject, chapter:r.chapter, question:r.question, answer:r.answer,
   principleType:r.principle_type, principleText:r.principle_text, principleImagePath:r.principle_image_path,
-  questionImagePath:r.question_image_path, memorized:r.memorized,
-  interval:r.interval, repetition:r.repetition, efactor:r.efactor, nextReview:r.next_review, createdAt:r.created_at}; }
+  questionImagePath:r.question_image_path, createdAt:r.created_at,
+  memorized:p.memorized, interval:p.interval, repetition:p.repetition, efactor:p.efactor, nextReview:p.next_review,
+  progressId:p.id}; }
 function mapDoubt(r){ return {id:r.id, subject:r.subject, chapter:r.chapter, question:r.question, answer:r.answer, imagePath:r.image_path, createdAt:r.created_at}; }
-function mapVignette(r){ return {id:r.id, subject:r.subject, chapter:r.chapter, questionImagePath:r.question_image_path, answerImagePath:r.answer_image_path,
-  caption:r.caption, interval:r.interval, repetition:r.repetition, efactor:r.efactor, nextReview:r.next_review, createdAt:r.created_at}; }
+function mapVignette(r, p){ return {id:r.id, subject:r.subject, chapter:r.chapter, questionImagePath:r.question_image_path, answerImagePath:r.answer_image_path,
+  caption:r.caption, createdAt:r.created_at,
+  interval:p.interval, repetition:p.repetition, efactor:p.efactor, nextReview:p.next_review,
+  progressId:p.id}; }
+
+// 自分がまだ触れていない(みんなの)カード/臨床像に、自分用の進捗行を作る(今日から復習対象になる)
+async function backfillProgress(table, idField, contentRows, progMap){
+  const today = todayStr();
+  const missing = contentRows.filter(r=>!progMap[r.id]).map(r=>{
+    const row = { user_id: currentUser.id, interval:0, repetition:0, efactor:2.5, next_review:today };
+    row[idField] = r.id;
+    return row;
+  });
+  if(missing.length===0) return;
+  const { data: inserted, error } = await sb.from(table).insert(missing).select();
+  if(!error && inserted){ inserted.forEach(p=> progMap[p[idField]] = p); }
+}
 
 async function loadAll(){
   await loadChapterTitles();
+  const today = todayStr();
+
+  // 通常カード(内容はみんな共有、進捗は自分の分だけ取得)
   const { data: cardRows, error: e1 } = await sb.from('cards').select('*').order('created_at',{ascending:false});
-  cards = e1 ? [] : (cardRows||[]).map(mapCard);
+  const cardContents = e1 ? [] : (cardRows||[]);
+  const { data: progRows, error: e1b } = await sb.from('card_progress').select('*').eq('user_id', currentUser.id);
+  const progMap = {};
+  (e1b ? [] : (progRows||[])).forEach(p=> progMap[p.card_id] = p);
+  await backfillProgress('card_progress', 'card_id', cardContents, progMap);
+  cards = cardContents.map(c=> mapCard(c, progMap[c.id] || {id:null,interval:0,repetition:0,efactor:2.5,next_review:today,memorized:false}));
+
+  // 疑問点(共有、進捗なし)
   const { data: doubtRows, error: e2 } = await sb.from('doubts').select('*').order('created_at',{ascending:false});
   doubts = e2 ? [] : (doubtRows||[]).map(mapDoubt);
+
+  // 臨床像(内容は共有、進捗は自分の分だけ)
   const { data: vignRows, error: e3 } = await sb.from('vignettes').select('*').order('created_at',{ascending:false});
-  vignettes = e3 ? [] : (vignRows||[]).map(mapVignette);
+  const vignContents = e3 ? [] : (vignRows||[]);
+  const { data: vprogRows, error: e3b } = await sb.from('vignette_progress').select('*').eq('user_id', currentUser.id);
+  const vprogMap = {};
+  (e3b ? [] : (vprogRows||[])).forEach(p=> vprogMap[p.vignette_id] = p);
+  await backfillProgress('vignette_progress', 'vignette_id', vignContents, vprogMap);
+  vignettes = vignContents.map(v=> mapVignette(v, vprogMap[v.id] || {id:null,interval:0,repetition:0,efactor:2.5,next_review:today}));
+
   fillChapterSelect(chapterSelect, subjectSelect.value);
   fillChapterSelect(doubtChapterSelect, doubtSubjectSelect.value);
   fillChapterSelect(vignChapterSelect, vignSubjectSelect.value);
@@ -636,10 +682,15 @@ async function commitPreviewN(){
   await saveChapterTitleIfNeeded(subject, chapter, chapterTitleInput.value.trim());
   const rows = pendingPreviewN.map(p=>({
     user_id: currentUser.id, subject, chapter, question:p.question, answer:p.answer,
-    principle_type:'none', interval:0, repetition:0, efactor:2.5, next_review:today, created_at:today
+    principle_type:'none', created_at:today
   }));
-  const { error } = await sb.from('cards').insert(rows);
+  const { data: inserted, error } = await sb.from('cards').insert(rows).select();
   if(error){ alert('保存エラー: '+error.message); return; }
+  const progRows = (inserted||[]).map(c=>({ user_id: currentUser.id, card_id:c.id, interval:0, repetition:0, efactor:2.5, next_review:today }));
+  if(progRows.length>0){
+    const { error: e2 } = await sb.from('card_progress').insert(progRows);
+    if(e2){ alert('進捗の保存エラー: '+e2.message); return; }
+  }
   pendingPreviewN=[]; document.getElementById('previewWrapN').innerHTML='';
   document.getElementById('pasteInputN').value=''; document.getElementById('parseMsgN').classList.remove('show');
   await loadAll(); alert('保存しました!');
@@ -667,10 +718,13 @@ document.getElementById('manAddBtnN').addEventListener('click', async ()=>{
     }
     const { error } = await sb.from('cards').insert([{
       id, user_id: currentUser.id, subject, chapter, question:q, answer:a,
-      principle_type:'none', question_image_path:questionImagePath,
-      interval:0, repetition:0, efactor:2.5, next_review:today, created_at:today
+      principle_type:'none', question_image_path:questionImagePath, created_at:today
     }]);
     if(error) throw error;
+    const { error: e2 } = await sb.from('card_progress').insert([{
+      user_id: currentUser.id, card_id:id, interval:0, repetition:0, efactor:2.5, next_review:today
+    }]);
+    if(e2) throw e2;
   }catch(e){ alert('保存エラー: '+e.message); return; }
   document.getElementById('manQN').value=''; document.getElementById('manAN').value='';
   document.getElementById('manImgN').value=''; document.getElementById('manImgNPreview').style.display='none';
@@ -793,10 +847,13 @@ document.getElementById('vignAddBtn').addEventListener('click', async ()=>{
     await uploadImage(vignAFile, aPath);
     const { error } = await sb.from('vignettes').insert([{
       id, user_id: currentUser.id, subject: vignSubjectSelect.value, chapter: vignChapterSelect.value,
-      question_image_path:qPath, answer_image_path:aPath, caption,
-      interval:0, repetition:0, efactor:2.5, next_review:today, created_at:today
+      question_image_path:qPath, answer_image_path:aPath, caption, created_at:today
     }]);
     if(error) throw error;
+    const { error: e2 } = await sb.from('vignette_progress').insert([{
+      user_id: currentUser.id, vignette_id:id, interval:0, repetition:0, efactor:2.5, next_review:today
+    }]);
+    if(e2) throw e2;
   }catch(e){ alert('保存エラー: '+e.message); return; }
   document.getElementById('vignQFile').value=''; document.getElementById('vignAFile').value='';
   document.getElementById('vignQPreview').style.display='none'; document.getElementById('vignAPreview').style.display='none';
@@ -964,7 +1021,7 @@ function renderList(){
   wrap.querySelectorAll('[data-act=toggle-memorized]').forEach(b=> b.addEventListener('click', async ()=>{
     const id = b.dataset.id;
     const c = cards.find(x=>x.id===id); if(!c) return;
-    const { error } = await sb.from('cards').update({ memorized: !c.memorized }).eq('id', id);
+    const { error } = await sb.from('card_progress').update({ memorized: !c.memorized }).eq('id', c.progressId);
     if(error){ alert('保存エラー: '+error.message); return; }
     await loadAll();
   }));
@@ -1182,8 +1239,8 @@ async function gradeItem(item, quality){
   if(d.efactor<1.3) d.efactor=1.3;
   const next = new Date(); next.setDate(next.getDate()+d.interval);
   d.nextReview = next.toISOString().slice(0,10);
-  const table = item.kind==='normal' ? 'cards' : 'vignettes';
-  await sb.from(table).update({ interval:d.interval, repetition:d.repetition, efactor:d.efactor, next_review:d.nextReview }).eq('id', d.id);
+  const table = item.kind==='normal' ? 'card_progress' : 'vignette_progress';
+  await sb.from(table).update({ interval:d.interval, repetition:d.repetition, efactor:d.efactor, next_review:d.nextReview }).eq('id', d.progressId);
 }
 </script>
 </body>
