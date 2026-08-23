@@ -199,46 +199,6 @@
     font-family:var(--mono);font-size:9px;color:var(--label);margin-top:5px;letter-spacing:0.1em;
   }
 
-  /* 必要ペース vs 目標ペース */
-  #page-bridge .pace{display:flex;gap:8px;margin-top:14px;}
-  #page-bridge .pace>div{
-    flex:1;text-align:center;background:var(--hull);border:1px solid var(--etch);
-    border-radius:10px;padding:10px 4px;
-  }
-  #page-bridge .pace .k{font-family:var(--mono);font-size:8.5px;letter-spacing:0.12em;color:var(--label);text-transform:uppercase;}
-  #page-bridge .pace .v{font-family:var(--mono);font-size:19px;font-weight:700;margin-top:5px;line-height:1;font-variant-numeric:tabular-nums;}
-  #page-bridge .pace .v small{font-size:9.5px;color:var(--label);font-weight:400;}
-  #page-bridge .pace .req .v{color:var(--caution);}
-  #page-bridge .pace .goal .v,#page-bridge .pace .left .v{color:var(--ink);}
-  #page-bridge .pace.nominal .req .v{color:var(--nominal);}
-  #page-bridge .pace.alert .req .v{color:var(--alert);}
-
-  #page-bridge .mission-foot{
-    display:flex;justify-content:space-between;align-items:center;margin-top:12px;
-    font-family:var(--mono);font-size:10px;color:var(--label);
-  }
-  #page-bridge .mission-foot button{
-    background:transparent;border:1px solid var(--etch);color:var(--label);
-    border-radius:8px;padding:5px 10px;font-size:10px;font-family:var(--mono);
-    letter-spacing:0.1em;cursor:pointer;text-transform:uppercase;flex-shrink:0;
-  }
-  #page-bridge .mission-foot button:hover{border-color:var(--readout);color:var(--readout);}
-
-  /* ---- ミッション設定モーダル ---- */
-  #missionModal .modal{background:#13202d;border:1px solid #263d52;color:#dceaf2;}
-  #missionModal h4{color:#7fe3d4;}
-  #missionModal label{color:#7d99ad;}
-  #missionModal input[type=text],#missionModal input[type=date],#missionModal input[type=number]{
-    background:#0b1622;border:1px solid #263d52;color:#dceaf2;
-  }
-  #missionModal .subjpick{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:8px;}
-  #missionModal .subjpick span{
-    text-align:center;font-size:11px;padding:7px 2px;border-radius:8px;
-    border:1px solid #263d52;color:#7d99ad;cursor:pointer;user-select:none;
-  }
-  #missionModal .subjpick span.on{background:rgba(127,227,212,0.12);border-color:#7fe3d4;color:#7fe3d4;font-weight:700;}
-  #missionModal .close{background:#7fe3d4;color:#0b1622;}
-
   /* ---- 本日の任務 ---- */
   #page-bridge .orders{display:flex;gap:10px;}
   #page-bridge .order{
@@ -301,12 +261,6 @@
   #page-bridge .cell .lamp{height:3px;border-radius:2px;background:#0a1017;margin-top:6px;overflow:hidden;}
   #page-bridge .cell .lamp>i{display:block;height:100%;background:var(--nominal);border-radius:2px;}
   #page-bridge .cell.full{border-color:var(--nominal);}
-  /* ミッション対象科目は上辺に標識を出す */
-  #page-bridge .cell.tgt::after{
-    content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);
-    width:16px;height:2px;background:var(--caution);border-radius:0 0 2px 2px;
-  }
-  #page-bridge .cell.full.tgt::after{background:var(--nominal);}
   #page-bridge .cell.full .lamp>i{box-shadow:0 0 8px rgba(79,174,133,0.7);}
 
   @keyframes boot{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
@@ -553,15 +507,15 @@
       </svg>
 
       <div class="hud">
-        <div class="mname" id="mTitle">ミッション未設定</div>
+        <div class="mname">本日の復習</div>
         <div class="dnum" id="clockNum">--</div>
-        <div class="dunit" id="clockUnit">Days remaining</div>
+        <div class="dunit" id="clockUnit">Cards to review</div>
         <div class="lamp-status nominal" id="mLamp">nominal</div>
       </div>
     </div>
 
     <div class="console">
-      <!-- 中央ホロディスプレイ: ミッション進捗 -->
+      <!-- 中央ホロディスプレイ: 全体の進捗 -->
       <div class="holo">
         <svg viewBox="0 0 200 216" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <defs>
@@ -602,17 +556,6 @@
           <div class="pct" id="holoPct">0%</div>
           <div class="cap" id="holoCap">0 / 0 ch</div>
         </div>
-      </div>
-
-      <div class="pace" id="paceRow">
-        <div class="left"><div class="k">残り</div><div class="v" id="mLeft">0<small> ch</small></div></div>
-        <div class="req"><div class="k">必要ペース</div><div class="v" id="mReq">0<small> ch/日</small></div></div>
-        <div class="goal"><div class="k">目標</div><div class="v" id="mGoal">3<small> ch/日</small></div></div>
-      </div>
-
-      <div class="mission-foot">
-        <span id="mProgress">国試まで --日</span>
-        <button id="btnEditMission">設定</button>
       </div>
     </div>
 
@@ -856,22 +799,6 @@ A: (回答)
   <div class="review-card" id="reviewCard"><div class="empty">今日の復習対象はありません 🎉</div></div>
 </div>
 
-<div class="modal-overlay" id="missionModal">
-  <div class="modal">
-    <h4>ミッション設定</h4>
-    <label>ミッション名</label>
-    <input type="text" id="mfTitle" placeholder="例: 内科外科+整形 完了">
-    <label>期限</label>
-    <input type="date" id="mfDate">
-    <label>1日の目標chapter数</label>
-    <input type="number" id="mfGoal" min="1" max="20" step="1">
-    <label>対象の科目(タップで選択)</label>
-    <div class="subjpick" id="mfSubjects"></div>
-    <button class="primary" id="mfSave">このミッションで出航する</button>
-    <button class="close" id="mfClose">閉じる</button>
-  </div>
-</div>
-
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <h4 id="modalTitle">原理・解説</h4>
@@ -1068,9 +995,6 @@ async function loadAll(){
   (e3b ? [] : (vprogRows||[])).forEach(p=> vprogMap[p.vignette_id] = p);
   await backfillProgress('vignette_progress', 'vignette_id', vignContents, vprogMap);
   vignettes = vignContents.map(v=> mapVignette(v, vprogMap[v.id] || {id:null,interval:0,repetition:0,efactor:2.5,next_review:today}));
-
-  // ミッション設定
-  await loadMission();
 
   // 学習記録(何日にどれだけ復習したか)
   const { data: sdRows } = await sb.from('study_days').select('*').eq('user_id', currentUser.id);
@@ -1710,41 +1634,7 @@ function renderVignetteList(){
 }
 
 // ================= BRIDGE(艦橋) =================
-// 「あたらしい内科外科」10科目 + 整形 = 初期ミッションの既定
-const DEFAULT_MISSION_SUBJECTS = ['腎','内分泌','血液','免疫','感染症','呼吸器','循環器','消化器','肝胆膵','神経','整形'];
-let mission = null;
-let mfPicked = [];
-
-function defaultMission(){
-  return { title:'内科外科10科目 + 整形 完了', target_date:'2026-08-07', daily_goal:3, subjects:[...DEFAULT_MISSION_SUBJECTS] };
-}
-async function loadMission(){
-  const { data, error } = await sb.from('missions').select('*').eq('user_id', currentUser.id).maybeSingle();
-  mission = (!error && data) ? data : defaultMission();
-  if(!Array.isArray(mission.subjects) || mission.subjects.length===0) mission.subjects = [...DEFAULT_MISSION_SUBJECTS];
-}
-async function saveMission(m){
-  const { error } = await sb.from('missions').upsert(
-    { user_id: currentUser.id, title:m.title, target_date:m.target_date, daily_goal:m.daily_goal, subjects:m.subjects },
-    { onConflict:'user_id' }
-  );
-  if(error){ alert('ミッションの保存エラー: '+error.message); return false; }
-  mission = m;
-  return true;
-}
-function daysUntil(dstr){
-  const [y,m,d] = dstr.split('-').map(Number);
-  const target = new Date(y, m-1, d);
-  const now = new Date(); now.setHours(0,0,0,0);
-  return Math.round((target - now) / 86400000);
-}
-// 国試(次に来る2月8日)までの日数 — 参考表示
-function daysToKokushi(){
-  const now = new Date();
-  let y = now.getFullYear();
-  if(new Date(y,1,8) < now) y += 1;
-  return daysUntil(`${y}-02-08`);
-}
+const DAILY_CHAPTER_GOAL = 3;
 
 // 定着 = SM-2の復習間隔が21日以上に伸びたカード(長期記憶に乗った証拠)
 // ※ memorized(暗記もの)は「丸暗記するしかないカード」という種別マークなので判定に使わない
@@ -1770,18 +1660,14 @@ function subjectStats(subj){
     mastery: total ? solid/total : 0
   };
 }
-// ミッション範囲の進捗(chapterを「開拓した=カードが1枚以上ある」で数える)
-function missionStats(){
+// 全科目まとめた進捗(chapterを「開拓した=カードが1枚以上ある」で数える)
+function overallStats(){
   let total=0, opened=0;
-  (mission.subjects||[]).forEach(s=>{
+  SUBJECTS.forEach(s=>{
     const st = subjectStats(s);
     total += st.chapters; opened += st.opened;
   });
-  const remaining = Math.max(0, total - opened);
-  const days = Math.max(1, daysUntil(mission.target_date));  // 期限当日でも1日分は残す
-  const overdue = daysUntil(mission.target_date) < 0;
-  const required = remaining === 0 ? 0 : remaining / days;
-  return { total, opened, remaining, days, required, overdue };
+  return { total, opened, pct: total ? opened/total : 0 };
 }
 // 今日はじめてカードが入ったchapterの数
 function newChaptersToday(){
@@ -1793,10 +1679,9 @@ function newChaptersToday(){
   });
   return Object.values(first).filter(d=> d === today).length;
 }
-// 次に開拓すべきchapter(ミッション対象の科目を優先)
+// 次に開拓すべきchapter
 function nextUntouchedChapter(){
-  const order = [...(mission.subjects||[]), ...SUBJECTS.filter(s=> !(mission.subjects||[]).includes(s))];
-  for(const subj of order){
+  for(const subj of SUBJECTS){
     const chs = Object.keys(MEDU4_STRUCTURE[subj]||{}).sort((a,b)=>parseFloat(a)-parseFloat(b));
     for(const ch of chs){
       if(chapterStats(subj, ch).n === 0) return { subject:subj, chapter:ch };
@@ -1823,7 +1708,7 @@ function playBootSequence(){
   setTimeout(()=> pg.classList.add('boot-3'), 620);
   setTimeout(()=> pg.classList.remove('booting','boot-1','boot-2','boot-3'), 1400);
 
-  // 残日数カウントアップ
+  // 復習枚数カウントアップ
   const el = document.getElementById('clockNum');
   const target = parseInt(el.textContent);
   if(!isNaN(target) && target > 0){
@@ -1839,28 +1724,30 @@ function playBootSequence(){
 }
 
 function renderBridge(){
-  if(!mission) return;
   const today = todayStr();
-  const ms = missionStats();
 
-  // --- ミッション ---
-  document.getElementById('mTitle').textContent = mission.title || 'ミッション';
-  const dLeft = daysUntil(mission.target_date);
-  document.getElementById('clockNum').textContent = ms.remaining===0 ? '完了' : (dLeft < 0 ? '0' : String(dLeft));
-  document.getElementById('clockUnit').textContent = ms.remaining===0 ? 'Mission complete' : (dLeft<0 ? 'Overdue' : 'Days remaining');
+  // --- 本日の復習すべきカード数 ---
+  const due = cards.filter(c=>c.nextReview<=today).length + vignettes.filter(v=>v.nextReview<=today).length;
+  document.getElementById('clockNum').textContent = String(due);
+  document.getElementById('clockUnit').textContent = due===0 ? 'All caught up' : 'Cards to review';
 
-  // ホロディスプレイ: 進捗リング + 科目ごとの目盛り
-  const pct = ms.total ? ms.opened/ms.total : 0;
+  const lamp = document.getElementById('mLamp');
+  lamp.classList.remove('nominal','caution','alert');
+  if(due===0){ lamp.classList.add('nominal'); lamp.textContent = 'clear'; }
+  else if(due<20){ lamp.classList.add('caution'); lamp.textContent = 'due'; }
+  else { lamp.classList.add('alert'); lamp.textContent = 'due'; }
+
+  // --- ホロディスプレイ: 全体の進捗率 + 科目ごとの目盛り ---
+  const os = overallStats();
   const CIRC = 2 * Math.PI * 83;
-  document.getElementById('holoArc').style.strokeDashoffset = CIRC * (1 - pct);
-  document.getElementById('holoPct').textContent = Math.round(pct*100) + '%';
-  document.getElementById('holoCap').textContent = `${ms.opened} / ${ms.total} ch`;
-  // 目盛り = ミッション対象の科目。開拓が完了した科目は明るく灯る
-  const tSubs = mission.subjects || [];
-  document.getElementById('holoTicks').innerHTML = tSubs.map((s,i)=>{
+  document.getElementById('holoArc').style.strokeDashoffset = CIRC * (1 - os.pct);
+  document.getElementById('holoPct').textContent = Math.round(os.pct*100) + '%';
+  document.getElementById('holoCap').textContent = `${os.opened} / ${os.total} ch`;
+  // 目盛り = 全24科目。開拓が完了した科目は明るく灯る
+  document.getElementById('holoTicks').innerHTML = SUBJECTS.map((s,i)=>{
     const st = subjectStats(s);
     const done = st.chapters>0 && st.opened === st.chapters;
-    const ang = (i / Math.max(1,tSubs.length)) * 2*Math.PI - Math.PI/2;
+    const ang = (i / SUBJECTS.length) * 2*Math.PI - Math.PI/2;
     const r1 = 64, r2 = 72;
     const x1 = 100+Math.cos(ang)*r1, y1 = 100+Math.sin(ang)*r1;
     const x2 = 100+Math.cos(ang)*r2, y2 = 100+Math.sin(ang)*r2;
@@ -1868,29 +1755,7 @@ function renderBridge(){
               stroke="${done ? '#4FAE85' : '#7fe3d4'}" stroke-opacity="${done ? 1 : 0.22}"><title>${escapeHtml(s)}</title></line>`;
   }).join('');
 
-  document.getElementById('mLeft').innerHTML = `${ms.remaining}<small> ch</small>`;
-  const req = ms.required;
-  document.getElementById('mReq').innerHTML = `${req===0 ? '0' : req.toFixed(1)}<small> ch/日</small>`;
-  document.getElementById('mGoal').innerHTML = `${mission.daily_goal}<small> ch/日</small>`;
-  document.getElementById('mProgress').textContent = `国試まで ${daysToKokushi()}日`;
-
-  // 状態灯: 必要ペースが目標以内なら順調、超えたら注意、1.5倍超で警報
-  const paceRow = document.getElementById('paceRow');
-  const lamp = document.getElementById('mLamp');
-  paceRow.classList.remove('nominal','alert');
-  lamp.classList.remove('nominal','caution','alert');
-  let state, text;
-  if(ms.remaining===0){ state='nominal'; text='complete'; }
-  else if(ms.overdue){ state='alert'; text='overdue'; }
-  else if(req <= mission.daily_goal){ state='nominal'; text='on track'; }
-  else if(req <= mission.daily_goal*1.5){ state='caution'; text='behind'; }
-  else { state='alert'; text='critical'; }
-  lamp.classList.add(state); lamp.textContent = text;
-  if(state==='nominal') paceRow.classList.add('nominal');
-  if(state==='alert') paceRow.classList.add('alert');
-
   // --- 本日の任務 ---
-  const due = cards.filter(c=>c.nextReview<=today).length + vignettes.filter(v=>v.nextReview<=today).length;
   const doneToday = studyDays[today] || 0;
   const dueEl = document.getElementById('orderDue');
   document.getElementById('dueNum').innerHTML = due===0 ? 'CLEAR' : `${due}<small> 枚</small>`;
@@ -1898,7 +1763,7 @@ function renderBridge(){
   const totalToday = due + doneToday;
   document.getElementById('dueBar').style.width = (totalToday ? doneToday/totalToday*100 : 100) + '%';
 
-  const goal = mission.daily_goal || 3;
+  const goal = DAILY_CHAPTER_GOAL;
   const nToday = newChaptersToday();
   const newEl = document.getElementById('orderNew');
   document.getElementById('newNum').innerHTML = `${nToday}<small> / ${goal}</small>`;
@@ -1934,19 +1799,19 @@ function renderBridge(){
   }
   strip.innerHTML = sHtml;
 
-  // --- SYSTEMS(24科目) ---
-  const inMission = new Set(mission.subjects||[]);
+  // --- SYSTEMS(24科目) 科目別チャプター進捗(チャプター数が分母) ---
   const grid = document.getElementById('sysGrid');
   grid.innerHTML = SUBJECTS.map((s,i)=>{
     const st = subjectStats(s);
     const lit = st.opened > 0;
     const full = st.chapters>0 && st.opened === st.chapters;
-    return `<div class="cell ${lit?'lit':''} ${full?'full':''} ${inMission.has(s)?'tgt':''} ${selectedSystem===s?'sel':''}"
+    const covPct = st.chapters ? Math.round(st.opened/st.chapters*100) : 0;
+    return `<div class="cell ${lit?'lit':''} ${full?'full':''} ${selectedSystem===s?'sel':''}"
               data-sys="${escapeHtml(s)}" style="animation-delay:${i*18}ms"
-              title="${escapeHtml(s)} / 開拓 ${st.opened}/${st.chapters} ch / 定着 ${st.solid}/${st.total}枚">
+              title="${escapeHtml(s)} / 進捗 ${st.opened}/${st.chapters} ch(${covPct}%) / 定着 ${st.solid}/${st.total}枚">
         <div class="nm">${escapeHtml(s)}</div>
         <div class="ch">${st.opened}/${st.chapters}</div>
-        <div class="lamp"><i style="width:${Math.round(st.mastery*100)}%"></i></div>
+        <div class="lamp"><i style="width:${covPct}%"></i></div>
       </div>`;
   }).join('');
   grid.querySelectorAll('.cell').forEach(el=>{
@@ -1977,40 +1842,6 @@ function renderBridge(){
     });
   }
 }
-
-// ---- ミッション設定モーダル ----
-function openMissionModal(){
-  document.getElementById('mfTitle').value = mission.title || '';
-  document.getElementById('mfDate').value = mission.target_date || '';
-  document.getElementById('mfGoal').value = mission.daily_goal || 3;
-  mfPicked = [...(mission.subjects||[])];
-  const wrap = document.getElementById('mfSubjects');
-  wrap.innerHTML = SUBJECTS.map(s=>
-    `<span class="${mfPicked.includes(s)?'on':''}" data-s="${escapeHtml(s)}">${escapeHtml(s)}</span>`
-  ).join('');
-  wrap.querySelectorAll('span').forEach(el=>{
-    el.addEventListener('click',()=>{
-      const s = el.dataset.s;
-      if(mfPicked.includes(s)) mfPicked = mfPicked.filter(x=>x!==s);
-      else mfPicked.push(s);
-      el.classList.toggle('on');
-    });
-  });
-  document.getElementById('missionModal').classList.add('show');
-}
-document.getElementById('btnEditMission').addEventListener('click', openMissionModal);
-document.getElementById('mfClose').addEventListener('click', ()=> document.getElementById('missionModal').classList.remove('show'));
-document.getElementById('mfSave').addEventListener('click', async ()=>{
-  const title = document.getElementById('mfTitle').value.trim() || 'ミッション';
-  const target_date = document.getElementById('mfDate').value;
-  const daily_goal = parseInt(document.getElementById('mfGoal').value) || 3;
-  if(!target_date){ alert('期限を入力してください'); return; }
-  if(mfPicked.length===0){ alert('対象の科目を1つ以上選んでください'); return; }
-  const ok = await saveMission({ title, target_date, daily_goal, subjects:[...mfPicked] });
-  if(!ok) return;
-  document.getElementById('missionModal').classList.remove('show');
-  renderBridge();
-});
 
 // 入力タブへ移動して、指定の科目/chapterを選んだ状態にする
 function jumpToInput(subject, chapter){
