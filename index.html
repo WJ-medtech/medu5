@@ -116,6 +116,12 @@
   .prin-edit{display:none;margin-top:7px;}
   .prin-edit.show{display:block;}
   .prin-edit textarea{min-height:70px;font-size:14px;}
+  .prin-edit input[type=file]{font-size:12px;margin-top:8px;width:100%;}
+  .mp img, .princ-box img{max-width:100%;border-radius:9px;margin-top:8px;display:block;}
+  .prin-thumb{margin-top:8px;}
+  .prin-thumb img{max-width:120px;border-radius:8px;border:1px solid var(--border);display:block;}
+  .prin-thumb button{font-size:11px;margin-top:5px;padding:4px 9px;border-radius:8px;border:1px solid var(--border);background:#fafffd;color:var(--danger);font-weight:600;cursor:pointer;}
+  .princ-box{margin-top:12px;font-size:13px;color:#5b4fd1;background:#f4f3ff;padding:10px;border-radius:9px;line-height:1.6;white-space:pre-wrap;}
 
   .ord{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f0f7f3;}
   .ord:last-of-type{border-bottom:none;}
@@ -389,6 +395,27 @@ $('sendLinkBtn').addEventListener('click', async ()=>{
 });
 $('logoutBtn').addEventListener('click', async ()=>{ await sb.auth.signOut(); location.reload(); });
 
+// ---------- 画像 ----------
+async function uploadImage(file, path){
+  const { error } = await sb.storage.from('private-media').upload(path, file, { upsert:true, contentType:file.type });
+  return !error;
+}
+async function signedUrl(path){
+  if(!path) return null;
+  const { data, error } = await sb.storage.from('private-media').createSignedUrl(path, 3600);
+  return error ? null : data.signedUrl;
+}
+// data-path を持つ img に、あとから実際のURLを流し込む
+async function hydrateImages(root){
+  const els = (root || document).querySelectorAll('img[data-path]');
+  for(const el of els){
+    const u = await signedUrl(el.dataset.path);
+    if(u){ el.src = u; el.removeAttribute('data-path'); }
+    else { el.replaceWith(Object.assign(document.createElement('div'),
+      { className:'ch-meta', textContent:'画像を読み込めませんでした' })); }
+  }
+}
+
 // ============================================================
 // 読み込み
 // ============================================================
@@ -629,7 +656,7 @@ function renderSession(){
     '<div class="qcard">' +
       '<div class="qtext">' + esc(c.question) + '</div>' +
       '<div class="atext" id="aText">' + esc(c.answer) + '</div>' +
-      (c.principle ? '<button class="princ-btn" id="princBtn">原理を見る</button>' : '') +
+      ((c.principle || c.principle_image_path) ? '<button class="princ-btn" id="princBtn">原理を見る</button>' : '') +
       '<button class="primary" id="revealBtn">答えを見る</button>' +
       '<div class="grade-row" id="gradeRow">' +
         (isR1
@@ -644,10 +671,15 @@ function renderSession(){
     $('aText').classList.add('show');
     $('revealBtn').style.display = 'none';
     $('gradeRow').classList.add('show');
-    if(c.principle) $('princBtn').classList.add('show');
+    if(c.principle || c.principle_image_path) $('princBtn').classList.add('show');
   });
-  if(c.principle) $('princBtn').addEventListener('click', ()=>{
-    $('princBtn').outerHTML = '<div class="mp" style="margin-top:12px;font-size:13px;color:#5b4fd1;background:#f4f3ff;padding:10px;border-radius:9px;line-height:1.6;white-space:pre-wrap;">'+esc(c.principle)+'</div>';
+  if(c.principle || c.principle_image_path) $('princBtn').addEventListener('click', ()=>{
+    const box = document.createElement('div');
+    box.className = 'princ-box';
+    box.innerHTML = esc(c.principle||'') +
+      (c.principle_image_path ? '<img data-path="'+esc(c.principle_image_path)+'" alt="原理の図">' : '');
+    $('princBtn').replaceWith(box);
+    hydrateImages(box);
   });
   body.querySelectorAll('.grade-btn').forEach(b=>
     b.addEventListener('click', ()=> answer(b.dataset.r)));
@@ -752,21 +784,56 @@ function renderChapterCards(box, k){
     return '<div class="mini" data-id="'+c.id+'">'+
       '<div class="mq">'+esc(c.question)+mark+'</div>'+
       '<div class="ma">'+esc(c.answer)+'</div>'+
-      (c.principle ? '<div class="mp">'+esc(c.principle)+'</div>' : '')+
-      '<div class="mrow"><button data-act="prin">'+(c.principle?'原理を直す':'原理を足す')+'</button>'+
+      ((c.principle || c.principle_image_path) ? '<div class="mp">'+esc(c.principle||'')+
+        (c.principle_image_path ? '<img data-path="'+esc(c.principle_image_path)+'" alt="原理の図">' : '')+'</div>' : '')+
+      '<div class="mrow"><button data-act="prin">'+((c.principle||c.principle_image_path)?'原理を直す':'原理を足す')+'</button>'+
       '<button data-act="del" class="del">削除</button></div>'+
       '<div class="prin-edit"><textarea placeholder="この問題の原理・理屈(任意)">'+esc(c.principle||'')+'</textarea>'+
-      '<button class="primary small" data-act="save-prin">保存する</button></div></div>';
+      '<label style="margin-top:8px;">写真(任意)</label>'+
+      '<input type="file" accept="image/*" data-act="prin-file">'+
+      (c.principle_image_path ? '<div class="prin-thumb"><img data-path="'+esc(c.principle_image_path)+'" alt="今の写真">'+
+        '<button data-act="prin-img-del">今の写真を外す</button></div>' : '')+
+      '<button class="primary small" data-act="save-prin">保存する</button>'+
+      '<div class="msg" data-act="prin-msg"></div></div></div>';
   }).join('');
 
   box.querySelectorAll('.mini').forEach(el=>{
     const id = el.dataset.id;
     el.querySelector('[data-act=prin]').addEventListener('click', ()=> el.querySelector('.prin-edit').classList.toggle('show'));
-    el.querySelector('[data-act=save-prin]').addEventListener('click', async ()=>{
+    let dropImage = false;
+    const delBtn = el.querySelector('[data-act=prin-img-del]');
+    if(delBtn) delBtn.addEventListener('click', ()=>{
+      dropImage = true;
+      delBtn.closest('.prin-thumb').style.opacity = '.3';
+      delBtn.textContent = '保存すると外れます';
+      delBtn.disabled = true;
+    });
+    el.querySelector('[data-act=save-prin]').addEventListener('click', async (ev)=>{
+      const btn = ev.currentTarget, msg = el.querySelector('[data-act=prin-msg]');
       const v = el.querySelector('textarea').value.trim();
-      const { error } = await sb.from('cards').update({ principle: v || null }).eq('id', id);
-      if(error){ alert('保存できませんでした: '+error.message); return; }
-      const c = cards.find(x=>x.id===id); c.principle = v || null;
+      const file = el.querySelector('[data-act=prin-file]').files[0];
+      const c = cards.find(x=>x.id===id);
+      let path = c.principle_image_path || null;
+
+      btn.disabled = true; btn.textContent = '保存中…';
+      if(dropImage) path = null;
+      if(file){
+        if(file.size > 8*1024*1024){
+          showMsg(msg, '写真が大きすぎます(8MBまで)。撮り直すか縮小してください。', true);
+          btn.disabled = false; btn.textContent = '保存する'; return;
+        }
+        const ext = (file.name.split('.').pop()||'jpg').toLowerCase();
+        const p = 'principles/' + id + '-' + Date.now() + '.' + ext;
+        if(!await uploadImage(file, p)){
+          showMsg(msg, '写真を上げられませんでした。通信を確認してもう一度試してください。', true);
+          btn.disabled = false; btn.textContent = '保存する'; return;
+        }
+        path = p;
+      }
+      const { error } = await sb.from('cards').update({ principle: v || null, principle_image_path: path }).eq('id', id);
+      btn.disabled = false; btn.textContent = '保存する';
+      if(error){ showMsg(msg, '保存できませんでした: '+error.message, true); return; }
+      c.principle = v || null; c.principle_image_path = path;
       renderChapterCards(el.closest('.ch-cards'), el.closest('.ch-item').dataset.k);
     });
     el.querySelector('[data-act=del]').addEventListener('click', async ()=>{
@@ -776,6 +843,7 @@ function renderChapterCards(box, k){
       await loadAll();
     });
   });
+  hydrateImages(box);
 }
 $('filterSubject').addEventListener('change', renderList);
 
