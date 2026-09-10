@@ -227,6 +227,10 @@
 
 <!-- ================= 一覧 ================= -->
 <div class="page" id="page-list">
+  <div class="card" style="padding:12px 14px;">
+    <select id="filterSubject"><option value="">すべての科目</option></select>
+  </div>
+  <div id="listWrap"></div>
   <div class="card">
     <h3>進む順番</h3>
     <p class="hint">上から順に出題されます。▲▼で入れ替えると、まだ手をつけていないchapterの順番がすぐ変わります。</p>
@@ -234,10 +238,6 @@
     <button class="ghost" id="resetOrder">最初の順番に戻す</button>
     <div class="msg" id="orderMsg"></div>
   </div>
-  <div class="card" style="padding:12px 14px;">
-    <select id="filterSubject"><option value="">すべての科目</option></select>
-  </div>
-  <div id="listWrap"></div>
 </div>
 
 <!-- ================= 入力 ================= -->
@@ -357,7 +357,8 @@ let cardProg = {};       // card_id -> 進捗行
 let titles = {};         // "科目||章" -> タイトル
 let studyDays = {};      // "YYYY-MM-DD" -> 問題数
 let forcedMode = 'auto';
-let session = null;      // 進行中のセッション
+let session = null;      // 進行中のセッション(メモリ上)
+let savedSession = null; // Supabaseに保存された「今日の続き」
 
 const $ = id => document.getElementById(id);
 const key = (s,c) => s + '||' + c;
@@ -442,6 +443,16 @@ async function loadAll(){
     SUBJECTS = saved;
   }
   rebuildChapters();
+
+  // 前回途中で終わったセッションがあれば拾う(日付が変わっていたら捨てる)
+  const { data: ss } = await sb.from('session_progress').select('*').eq('user_id', currentUser.id).maybeSingle();
+  if(ss && ss.day === today() && Array.isArray(ss.queue) && ss.idx < ss.queue.length){
+    savedSession = ss;
+  }else{
+    savedSession = null;
+    if(ss) await sb.from('session_progress').delete().eq('user_id', currentUser.id);
+  }
+
   fillSubjects($('inSubject'), false);
   fillSubjects($('filterSubject'), true);
   renderOrder(); renderHome(); renderList(); refreshChapterSelect();
@@ -561,20 +572,30 @@ function renderHome(){
   $('headSub').textContent = TOTAL_CH + ' chapter / ' + cards.length + ' 問';
 
   // 今日やること
-  const q = buildQueue();
   const box = $('queueBox');
-  if(q.total === 0){
-    box.innerHTML = '<div class="empty" style="padding:22px 6px;">' +
-      (cards.length === 0 ? 'まだカードがありません。<br>「入力」タブから口頭試問を追加してください。' : '今日の分は終わりです 🎉') + '</div>';
-    $('btnStart').disabled = true;
-  }else{
-    box.innerHTML = q.groups.map(g=>{
-      const n = g.cards ? g.cards.length : g.chapters.reduce((m,ch)=>m+(cardsByCh[key(ch.subject,ch.chapter)]||[]).length,0);
-      const sub = g.chapters ? g.chapters.map(ch=> ch.subject+' '+chLabel(ch.subject,ch.chapter)).join(' / ') : '';
-      return '<div class="queue-row"><div><div class="qn">'+esc(g.label)+'</div>'+
-             (sub?'<div class="ql">'+esc(sub)+'</div>':'')+'</div><div class="qn">'+n+' 問</div></div>';
-    }).join('');
+  const resumable = savedSession && savedSession.day === today() && Array.isArray(savedSession.queue) && savedSession.idx < savedSession.queue.length;
+  if(resumable){
+    const remain = savedSession.queue.length - savedSession.idx;
+    box.innerHTML = '<div class="queue-row"><div><div class="qn">前回の続き</div>'+
+      '<div class="ql">途中で終わっていた分です</div></div><div class="qn">'+remain+' 問</div></div>';
     $('btnStart').disabled = false;
+    $('btnStart').textContent = '続きから始める';
+  }else{
+    const q = buildQueue();
+    if(q.total === 0){
+      box.innerHTML = '<div class="empty" style="padding:22px 6px;">' +
+        (cards.length === 0 ? 'まだカードがありません。<br>「入力」タブから口頭試問を追加してください。' : '今日の分は終わりです 🎉') + '</div>';
+      $('btnStart').disabled = true;
+    }else{
+      box.innerHTML = q.groups.map(g=>{
+        const n = g.cards ? g.cards.length : g.chapters.reduce((m,ch)=>m+(cardsByCh[key(ch.subject,ch.chapter)]||[]).length,0);
+        const sub = g.chapters ? g.chapters.map(ch=> ch.subject+' '+chLabel(ch.subject,ch.chapter)).join(' / ') : '';
+        return '<div class="queue-row"><div><div class="qn">'+esc(g.label)+'</div>'+
+               (sub?'<div class="ql">'+esc(sub)+'</div>':'')+'</div><div class="qn">'+n+' 問</div></div>';
+      }).join('');
+      $('btnStart').disabled = false;
+    }
+    $('btnStart').textContent = 'はじめる';
   }
 
   // 連続日数
@@ -596,10 +617,12 @@ $('modeSwitch').addEventListener('click', e=>{
 // ============================================================
 // 学習セッション
 // ============================================================
-$('btnStart').addEventListener('click', ()=>{
+$('btnStart').addEventListener('click', async ()=>{
+  if(resumeSession()){ switchTab('study'); return; }
   const q = buildQueue();
   if(q.total === 0) return;
   startSession(q);
+  await persistSession();
   switchTab('study');
 });
 
@@ -625,7 +648,47 @@ function startSession(q){
     doneChapters: new Set(),
     retried: false
   };
-  renderSession();
+}
+
+// 前回の続きを、保存済みのカードID列から組み立て直す
+function resumeSession(){
+  if(!savedSession || savedSession.day !== today()) return false;
+  const q = savedSession.queue;
+  if(!Array.isArray(q) || savedSession.idx >= q.length) return false;
+  const items = q.map(r=>{
+    const c = cards.find(x=>x.id===r.id);
+    return c ? { card:c, stage:r.stage, chKey:r.chKey, subject:r.subject, chapter:r.chapter, retry:r.retry } : null;
+  }).filter(Boolean);
+  if(!items.length) return false;
+  session = {
+    phase: savedSession.phase,
+    queue: items,
+    idx: Math.min(savedSession.idx, items.length),
+    solved: savedSession.solved || 0,
+    answered: 0,
+    totalUnique: savedSession.total_unique || items.length,
+    doneChapters: new Set(),
+    retried: false
+  };
+  return true;
+}
+
+// 今の途中経過をSupabaseに保存する(閉じても続きから始められるように)
+async function persistSession(){
+  if(!session) return;
+  const rows = session.queue.map(it => ({
+    id: it.card.id, stage: it.stage, chKey: it.chKey,
+    subject: it.subject, chapter: it.chapter, retry: !!it.retry
+  }));
+  await sb.from('session_progress').upsert({
+    user_id: currentUser.id, day: today(), phase: session.phase,
+    queue: rows, idx: session.idx, solved: session.solved, total_unique: session.totalUnique
+  }, { onConflict:'user_id' });
+  savedSession = { day: today(), phase: session.phase, queue: rows, idx: session.idx, solved: session.solved, total_unique: session.totalUnique };
+}
+async function clearPersistedSession(){
+  savedSession = null;
+  await sb.from('session_progress').delete().eq('user_id', currentUser.id);
 }
 
 function renderSession(){
@@ -639,6 +702,7 @@ function renderSession(){
     $('sessBar').style.width = '100%';
     body.innerHTML = '<div class="empty">今日の分はここまでです 🎉<br>' + session.solved + ' 問クリアしました</div>' +
       '<button class="primary" id="backHome">ホームに戻る</button>';
+    clearPersistedSession();
     $('backHome').addEventListener('click', ()=>{ session=null; switchTab('home'); renderHome(); });
     return;
   }
@@ -712,6 +776,7 @@ async function answer(res){
   session.idx++;
   await maybeFinishChapter(it);
   await bumpStudyDay(1);
+  await persistSession();   // ここまでの進み具合を保存。閉じても続きから再開できる
   renderSession();
 }
 
