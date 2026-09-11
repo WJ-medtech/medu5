@@ -62,6 +62,13 @@
   .ring .pct b{font-size:20px;color:var(--primary-dark);}
   .ring .pct span{font-size:10px;color:var(--text-soft);}
   .phase-desc{font-size:12.5px;color:var(--text-soft);line-height:1.7;}
+  .pace{margin-top:14px;border-top:1px solid var(--border);padding-top:11px;font-size:12.5px;color:var(--text-soft);line-height:1.8;}
+  .pace b{color:var(--text);font-weight:700;}
+  .pace .pace-none{color:var(--text-soft);}
+  .pace-set{display:flex;align-items:center;gap:8px;margin-top:10px;}
+  .pace-set label{margin:0;flex-shrink:0;font-size:11.5px;}
+  .pace-set input[type=date]{flex:1;border:1px solid var(--border);border-radius:9px;padding:7px 9px;
+    font-size:14px;background:#fafffd;font-family:inherit;color:var(--text);min-width:0;}
   .queue-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--border);font-size:13.5px;}
   .queue-row:last-child{border-bottom:none;}
   .queue-row .qn{font-weight:700;color:var(--primary-dark);}
@@ -192,10 +199,17 @@
           <circle cx="48" cy="48" r="41" fill="none" stroke="#e3f5ec" stroke-width="10"/>
           <circle id="ringArc" cx="48" cy="48" r="41" fill="none" stroke="#4FAE85" stroke-width="10"
                   stroke-linecap="round" stroke-dasharray="257.6" stroke-dashoffset="257.6"/>
+          <circle id="ringMark" cx="48" cy="48" r="41" fill="none" stroke="#8fa99c" stroke-width="10"
+                  stroke-dasharray="2 255.6" stroke-dashoffset="0" style="visibility:hidden;"/>
         </svg>
         <div class="pct"><b id="ringPct">0%</b><span id="ringCap">0 / 173</span></div>
       </div>
       <div class="phase-desc" id="phaseDesc"></div>
+    </div>
+    <div class="pace" id="paceBox"></div>
+    <div class="pace-set">
+      <label for="targetDate">目標日</label>
+      <input type="date" id="targetDate">
     </div>
     <div class="modeswitch" id="modeSwitch">
       <button data-mode="auto" class="active">自動</button>
@@ -356,6 +370,7 @@ let chProg = {};         // "科目||章" -> 進捗行
 let cardProg = {};       // card_id -> 進捗行
 let titles = {};         // "科目||章" -> タイトル
 let studyDays = {};      // "YYYY-MM-DD" -> 問題数
+let targets = {};        // { r1:"YYYY-MM-DD", r2:..., r3:... } 各周の目標日
 let forcedMode = 'auto';
 let session = null;      // 進行中のセッション(メモリ上)
 let savedSession = null; // Supabaseに保存された「今日の続き」
@@ -442,6 +457,7 @@ async function loadAll(){
     DEFAULT_ORDER.forEach(x => { if(!saved.includes(x)) saved.push(x); });
     SUBJECTS = saved;
   }
+  targets = (st && st.targets && typeof st.targets === 'object') ? st.targets : {};
   rebuildChapters();
 
   // 前回途中で終わったセッションがあれば拾う(日付が変わっていたら捨てる)
@@ -542,6 +558,65 @@ function buildQueue(){
 }
 
 // ============================================================
+// 今日あるべき位置(目標日からの逆算)
+// ============================================================
+// その周を始めた日。記録がなければ今日を起点にする。
+function phaseStart(p){
+  let ds = [];
+  if(p==='r1') ds = CHAPTERS.map(ch => (chProg[key(ch.subject,ch.chapter)]||{}).r1_first_at);
+  else if(p==='r2') ds = CHAPTERS.map(ch => (chProg[key(ch.subject,ch.chapter)]||{}).r2_at);
+  ds = ds.filter(Boolean).sort();
+  return ds[0] || today();
+}
+function setRingMark(pct){
+  const el = $('ringMark');
+  if(pct === null || pct === undefined){ el.style.visibility = 'hidden'; return; }
+  el.style.visibility = 'visible';
+  el.style.strokeDashoffset = String(-(257.6 * Math.min(100, Math.max(0, pct)) / 100 - 1));
+}
+// 目標日まで一定ペースで進んだとき、今日いるはずの位置を出す
+function renderPace(p, done, total, unit){
+  const box = $('paceBox'), inp = $('targetDate');
+  const tg = targets[p] || '';
+  if(document.activeElement !== inp) inp.value = tg;
+
+  if(!tg){
+    box.innerHTML = '<div class="pace-none">目標日を入れると、今日あるべき位置が出ます</div>';
+    setRingMark(null);
+    return;
+  }
+  const t = today();
+  const start = phaseStart(p);
+  const span = daysBetween(start, tg);
+  const elapsed = daysBetween(start, t);
+  const ratio = span > 0 ? Math.min(1, Math.max(0, elapsed / span)) : 1;
+  const ideal = Math.round(total * ratio);
+  const diff = done - ideal;
+  const leftDays = daysBetween(t, tg);
+  const remain = Math.max(0, total - done);
+  const gap = diff === 0 ? 'ちょうど'
+            : diff < 0 ? (-diff) + ' ' + unit + ' 遅れ'
+            : diff + ' ' + unit + ' 前倒し';
+
+  let line2;
+  if(remain === 0) line2 = 'この周は終わっています';
+  else if(leftDays > 0) line2 = '目標日まで <b>' + leftDays + '</b> 日 ・ 残り <b>' + remain + '</b> ' + unit +
+                                ' ・ 1日 <b>' + (remain/leftDays).toFixed(1) + '</b> ' + unit;
+  else if(leftDays === 0) line2 = '目標日は今日 ・ 残り <b>' + remain + '</b> ' + unit;
+  else line2 = '目標日を <b>' + (-leftDays) + '</b> 日 過ぎています ・ 残り <b>' + remain + '</b> ' + unit;
+
+  box.innerHTML = '今日の予定 <b>' + ideal + '</b> ' + unit + ' / 実際 <b>' + done + '</b> ' + unit +
+                  '（' + gap + '）<br>' + line2;
+  setRingMark(total ? ideal/total*100 : 0);
+}
+$('targetDate').addEventListener('change', async ()=>{
+  const p = phase(), v = $('targetDate').value;
+  if(v) targets[p] = v; else delete targets[p];
+  renderHome();
+  await sb.from('app_settings').upsert({ user_id: currentUser.id, targets }, { onConflict:'user_id' });
+});
+
+// ============================================================
 // ホーム
 // ============================================================
 function renderHome(){
@@ -570,6 +645,7 @@ function renderHome(){
   $('ringCap').textContent = done + ' / ' + total;
   $('phaseDesc').textContent = desc;
   $('headSub').textContent = TOTAL_CH + ' chapter / ' + cards.length + ' 問';
+  renderPace(p, done, total, p==='r3' ? '問' : 'chapter');
 
   // 今日やること
   const box = $('queueBox');
